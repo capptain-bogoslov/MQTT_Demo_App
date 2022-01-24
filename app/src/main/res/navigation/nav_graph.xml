@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/connectToBrokerFragment">
+
+    <fragment
+        android:id="@+id/connectToBrokerFragment"
+        android:name="com.example.mqtt_demo_app.ui.fragments.ConnectToBrokerFragment"
+        android:label="Connect to MQTT Broker"
+        tools:layout="@layout/fragment_connect_to_broker" >
+
+        <action
+            android:id="@+id/action_connectToBrokerFragment_to_connectToDeviceFragment"
+            app:destination="@id/connectToDeviceFragment" />
+        <argument
+            android:name="message"
+            app:argType="string"
+            app:nullable="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/addDeviceFragment"
+        android:name="com.example.mqtt_demo_app.ui.fragments.AddDeviceFragment"
+        android:label="{deviceName}"
+        tools:layout="@layout/fragment_add_device" >
+
+        <argument
+            android:name="deviceBrand"
+            app:argType="string"/>
+        <argument
+            android:name="type"
+            app:argType="string"
+            app:nullable="false"
+            />
+        <argument
+            android:name="deviceName"
+            app:argType="string"/>
+
+        <argument
+            android:name="deviceId"
+            app:argType="integer"/>
+
+        <argument
+            android:name="deviceType"
+            app:argType="string"/>
+
+        <action
+            android:id="@+id/action_addDeviceFragment_to_connectToDeviceFragment"
+            app:destination="@id/connectToDeviceFragment" />
+        <action
+            android:id="@+id/action_addDeviceFragment_to_monitorMqttClientFragment"
+            app:destination="@id/monitorMqttClientFragment"
+            app:popUpTo="@id/connectToDeviceFragment"/>
+        <argument
+            android:name="topicId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_addDeviceFragment_to_connectToBrokerFragment"
+            app:destination="@id/connectToBrokerFragment"
+            app:popUpTo="@id/connectToBrokerFragment"
+            app:popUpToInclusive="true"/>
+    </fragment>
+    <fragment
+        android:id="@+id/connectToDeviceFragment"
+        android:name="com.example.mqtt_demo_app.ui.fragments.ConnectToDeviceFragment"
+        android:label="My Devices"
+        tools:layout="@layout/fragment_connect_to_device" >
+        <action
+            android:id="@+id/action_connectToDeviceFragment_to_addDeviceFragment"
+            app:destination="@id/addDeviceFragment" />
+        <argument
+            android:name="message"
+            app:argType="string"
+            app:nullable="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/monitorMqttClientFragment"
+        android:name="com.example.mqtt_demo_app.ui.fragments.MonitorMqttClientFragment"
+        android:label="{deviceName}"
+        tools:layout="@layout/fragment_monitor_mqtt_client" >
+
+        <argument
+            android:name="deviceName"
+            app:argType="string" />
+        <argument
+            android:name="deviceBrand"
+            app:argType="string" />
+        <argument
+            android:name="deviceType"
+            app:argType="string" />
+    </fragment>
+</navigation>

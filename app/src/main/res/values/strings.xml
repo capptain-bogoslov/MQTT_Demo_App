@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">MQTT_Demo_App</string>
+    <string name="label1">CONNECT TO YOUR DEVICES</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="connect">connect to Broker</string>
+    <string name="label2">My Devices</string>
+    <string name="add_device">Add Device</string>
+    <string name="type">Type</string>
+    <string name="brand">Brand</string>
+    <string name="name">Name</string>
+    <string name="subscribe">SUBSCRIBE</string>
+    <string name="delete">DELETE</string>
+    <string name="edit">EDIT</string>
+    <string name="unsubscribe">UNSUBSCRIBE</string>
+    <string name="device_type">Device Type:</string>
+    <string name="save">SAVE</string>
+    <string name="topic_id">Topic Id</string>
+    <string name="monitor">MONITOR</string>
+    <string name="oven_timer">OVEN TIMER:</string>
+    <string name="seconds">sec</string>
+
+    <string-array name="deviceTypes">
+        <item>Microwave</item>
+        <item>Air-Condition</item>
+        <item>Refrigerator</item>
+    </string-array>
+
+
+</resources>

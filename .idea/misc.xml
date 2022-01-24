@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.18518518518518517" />
+        <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/drawable/air_condition_unit.xml" value="0.18177083333333333" />
+        <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/drawable/circle_shape.xml" value="0.1" />
+        <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/drawable/ic_launcher_background.xml" value="0.18518518518518517" />
+        <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/drawable/oven.xml" value="0.18177083333333333" />
+        <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/drawable/round_progress_bar.xml" value="0.18518518518518517" />
+        <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/layout/activity_main.xml" value="0.10144927536231885" />
+        <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/layout/fragment_add_device.xml" value="0.22" />
+        <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/layout/fragment_blank.xml" value="0.1" />
+        <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/layout/fragment_connect_to_broker.xml" value="0.22" />
+        <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/layout/fragment_connect_to_device.xml" value="0.16666666666666666" />
+        <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/layout/fragment_monitor_mqtt_client.xml" value="0.16666666666666666" />
+        <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/layout/recycler_item_view.xml" value="0.22" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>
