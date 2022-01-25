@@ -19,6 +19,7 @@
     <string name="monitor">MONITOR</string>
     <string name="oven_timer">OVEN TIMER:</string>
     <string name="seconds">sec</string>
+    <string name="loading">Loading</string>
 
     <string-array name="deviceTypes">
         <item>Microwave</item>
