@@ -1,20 +1,14 @@
 package com.example.mqtt_demo_app.ui.fragments
 
 import android.os.Bundle
-import android.os.Handler
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.activityViewModels
-import com.example.mqtt_demo_app.R
-import com.example.mqtt_demo_app.data.DeviceViewModel
-import com.example.mqtt_demo_app.databinding.FragmentAddDeviceBinding
+import com.example.mqtt_demo_app.ui.DeviceViewModel
 import com.example.mqtt_demo_app.databinding.FragmentMonitorMqttClientBinding
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
-import org.eclipse.paho.client.mqttv3.MqttCallback
-import org.eclipse.paho.client.mqttv3.MqttMessage
 import kotlin.math.abs
 
 
@@ -31,6 +25,7 @@ class   MonitorMqttClientFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var deviceType: String
     private lateinit var deviceBrand: String
+    private var deviceId: Int =0
     //Get the VM
     private val viewModel: DeviceViewModel by activityViewModels()
 
@@ -41,6 +36,7 @@ class   MonitorMqttClientFragment : Fragment() {
         arguments?.let {
             deviceBrand = it.getString("deviceBrand").toString()
             deviceType = it.getString("deviceType").toString()
+            deviceId = it.getInt("deviceId")
         }
 
     }
@@ -48,7 +44,7 @@ class   MonitorMqttClientFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         // Inflate the view, set the value of binding and return the root view
         _binding = FragmentMonitorMqttClientBinding.inflate(inflater, container, false)
         return binding.root
@@ -64,39 +60,21 @@ class   MonitorMqttClientFragment : Fragment() {
         val time = binding.timeTextView
         val progressBar = binding.progressBar
 
-        /**
-         * OBSERVE OF VARIABLES FOR TIME AND PROGRESS BAR
-         */
 
+        viewModel.setCallBackForPushMessages()
 
+        viewModel.getMessageReceived().observe(viewLifecycleOwner, { value->
+            //Message to appear when Connection is Lost
+            when(value) {
+                "FAILURE" ->
+                    Toast.makeText(context, "Connection Lost", Toast.LENGTH_LONG).show()
 
-        //Get the MqttAndroidClient IOT receive the Push Messages
-        val client = viewModel.getMqttAndroidClient()
-
-
-
-        //Set a Callback method to handle the received messages
-        client.setCallback(object: MqttCallback{
-            override fun connectionLost(cause: Throwable?) {
-                Toast.makeText(context, "ConnectionLost Message: ${cause.toString()}", Toast.LENGTH_LONG).show()
             }
+        })
 
-            override fun messageArrived(topic: String?, message: MqttMessage?) {
-                Toast.makeText(context, "$topic Message: ${message.toString()}", Toast.LENGTH_LONG).show()
-                val value = message.toString()
-                time.text = value
-                progressBar.progress = value.toInt()
-
-                /**
-                 * SAVE VALUES TO ROOM DB
-                 */
-            }
-
-            override fun deliveryComplete(token: IMqttDeliveryToken?) {
-                TODO("Not yet implemented")
-            }
-
-
+        viewModel.getPayload().observe(viewLifecycleOwner, { payload ->
+            time.text = payload
+            progressBar.progress = (abs(60-payload.toInt()))
         })
 
     }

@@ -7,12 +7,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.Observer
 import androidx.lifecycle.coroutineScope
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.mqtt_demo_app.adapters.DeviceListAdapter
-import com.example.mqtt_demo_app.data.DeviceViewModel
+import com.example.mqtt_demo_app.ui.DeviceViewModel
 import com.example.mqtt_demo_app.databinding.FragmentConnectToDeviceBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -28,21 +27,15 @@ class ConnectToDeviceFragment : Fragment() {
     private lateinit var message: String
     //Get nullable reference to FragmentUserBindingClass
     private var _binding: FragmentConnectToDeviceBinding? = null
-
     //Get the value but once assigned you can't assign it to something else
     private val binding get() = _binding!!
     //VM
     private val viewModel: DeviceViewModel by activityViewModels()
 
-   /* private val viewModel: DeviceViewModel by activityViewModels {
-        DeviceModelFactory(
-            (activity?.application as DeviceApplication).repository
-        )
-    }
-*/
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
 
         //Get arguments from Previous Arguments
         arguments?.let {
@@ -52,12 +45,36 @@ class ConnectToDeviceFragment : Fragment() {
         //Display Toast if there is a message
         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
 
+
+    /*    //Callback to disconnect from Broker if Back Button is Pressed
+        requireActivity().onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    client.disconnect()
+                    //navController.popBackStack()
+//                    findNavController().navigate(R.id.connectToBrokerFragment)
+                }
+            }
+        )*/
+
+        /*// This callback will only be called when MyFragment is at least Started.
+        val callback: OnBackPressedCallback =
+            object : OnBackPressedCallback(true *//* enabled by default *//*) {
+                override fun handleOnBackPressed() {
+                    client.disconnect()
+                    //navController.popBackStack()
+                    findNavController().navigate(R.id.connectToBrokerFragment)
+                }
+            }
+        requireActivity().onBackPressedDispatcher.addCallback(this, callback)*/
+
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         // Inflate the view, set the value of binding and return the root view
         _binding = FragmentConnectToDeviceBinding.inflate(inflater, container, false)
 
@@ -69,7 +86,6 @@ class ConnectToDeviceFragment : Fragment() {
 
         val recyclerView = binding.recyclerView
         recyclerView.layoutManager = LinearLayoutManager(context)
-
 
         //Navigate to Add || Edit Device and pass the necessary arguments
         val deviceAdapter = DeviceListAdapter {
@@ -89,7 +105,7 @@ class ConnectToDeviceFragment : Fragment() {
 
         //Update the cached copy of the devices in the adapter
         lifecycle.coroutineScope.launch {
-            viewModel.getAllDevices().observe(viewLifecycleOwner, Observer { devices ->
+            viewModel.getAllDevices().observe(viewLifecycleOwner, { devices ->
                 devices?.let { deviceAdapter.submitList(it) }
             })
         }
@@ -108,7 +124,6 @@ class ConnectToDeviceFragment : Fragment() {
         }
 
     }
-
 
     override fun onDestroyView() {
         super.onDestroyView()
