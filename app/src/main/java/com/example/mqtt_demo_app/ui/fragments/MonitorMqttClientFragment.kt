@@ -6,9 +6,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.text.isDigitsOnly
 import androidx.fragment.app.activityViewModels
+import com.example.mqtt_demo_app.R
 import com.example.mqtt_demo_app.ui.DeviceViewModel
 import com.example.mqtt_demo_app.databinding.FragmentMonitorMqttClientBinding
+import java.lang.NumberFormatException
 import kotlin.math.abs
 
 
@@ -73,8 +76,14 @@ class   MonitorMqttClientFragment : Fragment() {
         })
 
         viewModel.getPayload().observe(viewLifecycleOwner, { payload ->
-            time.text = payload
-            progressBar.progress = (abs(60-payload.toInt()))
+            if(payload.isDigitsOnly()) time.text = payload else time.text=getString(R.string.loading)
+
+            try {
+                progressBar.progress = (abs(60-payload.toInt()))
+            } catch (e1: NumberFormatException) {
+
+            }
+
         })
 
     }
