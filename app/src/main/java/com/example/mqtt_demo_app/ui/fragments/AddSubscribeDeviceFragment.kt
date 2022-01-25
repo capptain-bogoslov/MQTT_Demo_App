@@ -1,7 +1,6 @@
 package com.example.mqtt_demo_app.ui.fragments
 
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -11,14 +10,11 @@ import android.widget.SpinnerAdapter
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.Observer
 import androidx.lifecycle.coroutineScope
 import androidx.navigation.findNavController
 import com.example.mqtt_demo_app.R
-import com.example.mqtt_demo_app.data.DeviceViewModel
+import com.example.mqtt_demo_app.ui.DeviceViewModel
 import com.example.mqtt_demo_app.databinding.FragmentAddDeviceBinding
-import com.example.mqtt_demo_app.mqtt.MQTT_CLIENT_ID
-import com.example.mqtt_demo_app.mqtt.MQTT_SERVER_URI
 import com.example.mqtt_demo_app.mqtt.MqttClient2
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -47,17 +43,9 @@ class AddDeviceFragment : Fragment() {
     private lateinit var deviceName: String
     private lateinit var deviceType: String
     private lateinit var deviceBrand: String
-    private var subscribed: Boolean = false
     private lateinit var type: String
     private lateinit var topicId: String
     private val viewModel: DeviceViewModel by activityViewModels()
-
-    /*//Get a reference to VM
-    private val viewModel: DeviceViewModel by activityViewModels {
-        DeviceModelFactory\(
-            (activity?.application as DeviceApplication).repository
-        )
-    }*/
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,7 +57,6 @@ class AddDeviceFragment : Fragment() {
             deviceBrand = it.getString("deviceBrand").toString()
             deviceName = it.getString("deviceName").toString()
             deviceType = it.getString("deviceType").toString()
-            subscribed = it.getBoolean("subscribed")
             type = it.getString("type").toString()
             topicId = it.getString("topicId").toString()
             viewModel.setSpecificDevice(deviceId)
@@ -105,31 +92,28 @@ class AddDeviceFragment : Fragment() {
         //Get the MqttAndroidClient to Connect to MQTT Broker
         val client = viewModel.getMqttAndroidClient()
 
-        /*// Open MQTT Broker communication
-        mqttClient2 = MqttClient2(context, MQTT_SERVER_URI, MQTT_CLIENT_ID)*/
-
         //Set the values for the layouts
         topicIdEditText.setText(topicId)
         deviceNameEditText.setText(deviceName)
         deviceBrandEditText.setText(deviceBrand)
         typeSpinner.setSelection(resources.getStringArray(R.array.deviceTypes).indexOf(type))
 
-        //Observe subscribed value to determine whether the User is Subscribed to Device
-        viewModel.subscribed.observe(viewLifecycleOwner, Observer { value ->
-            //Changed button text&color if user has Subscribed to Device
-            if (value) {
+        //Hide Layout for Subscribe if the User Adds a new Device
+        if (type == "ADD") subscribeButton.isVisible = false
+
+        //Observe if the User is already Subscribed toa Device and the Connection is Active to display the Layouts
+        viewModel.isClientSubscribed().observe(viewLifecycleOwner, { subscribed ->
+            if (subscribed) {
                 subscribeButton.text = getString(R.string.monitor)
                 subscribeButton.setBackgroundColor(resources.getColor(R.color.orange))
+                unsubscribeButton.visibility = View.VISIBLE
             } else {
                 subscribeButton.text = getString(R.string.subscribe)
                 subscribeButton.setBackgroundColor(resources.getColor(R.color.colorPrimary))
+                unsubscribeButton.visibility = View.GONE
             }
-        })
 
-        if (type == "ADD") {
-            subscribeButton.isVisible = false
-            unsubscribeButton.isVisible = false
-        }
+        })
 
         //Put Values to Spinner
         val adapter = activity?.applicationContext?.let {
@@ -139,8 +123,6 @@ class AddDeviceFragment : Fragment() {
             )
         } as SpinnerAdapter
         typeSpinner.adapter = adapter
-
-
 
         //Button Listeners to handle Device
         saveUpdateButton.setOnClickListener {
@@ -201,7 +183,6 @@ class AddDeviceFragment : Fragment() {
         subscribeButton.setOnClickListener {
 
             //Subscribe User to Device if not subscribed
-            if (!subscribed) {
                 val topic = topicIdEditText.text.toString()
                 val qos = 1
                 try {
@@ -209,14 +190,11 @@ class AddDeviceFragment : Fragment() {
                     subToken.actionCallback = object : IMqttActionListener {
                         override fun onSuccess(asyncActionToken: IMqttToken) {
 
-                            viewModel.getSpecificDevice().value?.let { it ->
-                                //Mark a Device as Subscribed in DB
-                                viewModel.subscribeToDevice(it)
-                                viewModel.update(it)
-                            }
+                            viewModel.setSubscribed()
                             view.findNavController()
                                 .navigate(
                                     AddDeviceFragmentDirections.actionAddDeviceFragmentToMonitorMqttClientFragment(
+                                        deviceId = deviceId,
                                         deviceName = deviceName,
                                         deviceType = deviceType,
                                         deviceBrand = deviceBrand
@@ -235,34 +213,19 @@ class AddDeviceFragment : Fragment() {
                 } catch (e: MqttException) {
                     e.printStackTrace()
                 }
-            } else {
-                //Navigate to Fragment directly
-                view.findNavController()
-                    .navigate(
-                        AddDeviceFragmentDirections.actionAddDeviceFragmentToMonitorMqttClientFragment(
-                            deviceName = deviceName,
-                            deviceType = deviceType,
-                            deviceBrand = deviceBrand
-                        )
-                    )
-            }
+
         }
 
         //Listener for UNSUBSCRIBE Button that unsubscribes Android Client from the Topic in MQTT Broker
         unsubscribeButton.setOnClickListener {
 
-            if (subscribed) {
-                val topic = "foo/bar"
+                val topic = topicIdEditText.text.toString()
                 try {
                     val unsubToken = client.unsubscribe(topic)
                     unsubToken.actionCallback = object : IMqttActionListener {
                         override fun onSuccess(asyncActionToken: IMqttToken) {
                             // The subscription could successfully be removed from the client
-                            viewModel.getSpecificDevice().value?.let { it ->
-                                //Mark a Device as Subscribed in DB
-                                viewModel.unsubscribeToDevice(it)
-                                viewModel.update(it)
-                            }
+                            viewModel.setUnsubscribed()
                             Toast.makeText(context, "You are now unsubscribed to that topic!", Toast.LENGTH_LONG).show()
                         }
 
@@ -278,9 +241,6 @@ class AddDeviceFragment : Fragment() {
                 } catch (e: MqttException) {
                     e.printStackTrace()
                 }
-            } else {
-                Toast.makeText(context, "You are not subscribed to that topic", Toast.LENGTH_LONG).show()
-            }
         }//end Unsubscribe
     }
 

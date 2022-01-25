@@ -89,5 +89,8 @@
         <argument
             android:name="deviceType"
             app:argType="string" />
+        <argument
+            android:name="deviceId"
+            app:argType="integer" />
     </fragment>
 </navigation>

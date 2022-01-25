@@ -17,6 +17,6 @@ data class Device(
     @ColumnInfo(name = "deviceBrand") var deviceBrand: String,
     @ColumnInfo(name = "deviceType") var deviceType: String,
     @ColumnInfo(name = "topicId") var topicId: String,
-    @ColumnInfo(name = "time") var time: Int,
+    @ColumnInfo(name = "time") var time: String,
     @ColumnInfo(name = "temperature") var temperature: Double,
 )

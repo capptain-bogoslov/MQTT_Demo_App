@@ -102,6 +102,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="48dp"
         android:layout_marginEnd="32dp"
+        android:visibility="gone"
         android:backgroundTint="@color/grey"
         android:text="@string/unsubscribe"
         app:layout_constraintEnd_toEndOf="parent"
