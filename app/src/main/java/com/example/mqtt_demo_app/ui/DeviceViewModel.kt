@@ -1,8 +1,10 @@
 package com.example.mqtt_demo_app.ui
 
+import android.util.Log
 import androidx.lifecycle.*
 import com.example.mqtt_demo_app.data.DeviceRepository
 import com.example.mqtt_demo_app.database.Device
+import com.example.mqtt_demo_app.mqtt.MqttClient2
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import org.eclipse.paho.android.service.MqttAndroidClient
@@ -22,20 +24,17 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     private val allDevices: LiveData<List<Device>> = repository.allDevices.asLiveData()
     private val deviceId: MutableLiveData<Int> = MutableLiveData()
     private val clientSubscribed: MutableLiveData<Boolean> = MutableLiveData(false)
-    private val connectionToBroker: MutableLiveData<String> = MutableLiveData("Start")
-    private val messageReceived: MutableLiveData<String> = MutableLiveData()
-    private val payload: MutableLiveData<String> = MutableLiveData()
     private val specificDevice: LiveData<Device> = Transformations.switchMap(deviceId) { device_id ->
         repository.getDevice(device_id).asLiveData()
     }
     //Holds an Instance of Mqtt client class
     private lateinit var client: MqttAndroidClient
+    private lateinit var mqttClient: MqttClient2
 
     //Coroutines to handle data in a non-blocking way
     fun insert(device: Device) = viewModelScope.launch { repository.insert(device) }
     fun update(device: Device) = viewModelScope.launch { repository.update(device) }
     fun delete(device: Device) = viewModelScope.launch { repository.delete(device) }
-
 
     //get All Devices
     fun getAllDevices(): LiveData<List<Device>> {
@@ -47,19 +46,9 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
         return specificDevice
     }
 
-    //Get payload of Message
-    fun getPayload(): LiveData<String> {
-        return payload
-    }
-
     //set the value of a specific device
     fun setSpecificDevice(id: Int) {
         deviceId.value = id
-    }
-
-    //get if Message Received from MQTT Client
-    fun getMessageReceived(): LiveData<String> {
-        return messageReceived
     }
 
     //Updating values of existing Devices
@@ -84,19 +73,14 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     }
 
     //function that creates an MqttAndroidClient
-    fun setMqttAndroidClient(mqttClient: MqttAndroidClient) {
-        client = mqttClient
+    fun setMqttAndroidClient(client: MqttClient2) {
+        mqttClient = client
 
     }
 
     //Function that will return the MqttAndroidClient
-    fun getMqttAndroidClient(): MqttAndroidClient {
-        return client
-    }
-
-    //function that returns if there is an active connection to Broker
-    fun isUserConnectedToBroker(): LiveData<String> {
-        return connectionToBroker
+    fun getMqttAndroidClient(): MqttClient2 {
+        return mqttClient
     }
 
     //Mark an Android Client as Subscribed
@@ -111,62 +95,18 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
 
     //Returns if a Client is Subscribed to a device
     fun isClientSubscribed(): LiveData<Boolean> {
-        if (!client.isConnected) clientSubscribed.postValue(false)
+        //if (!client.isConnected) clientSubscribed.postValue(false)
         return clientSubscribed
-    }
-
-    //Connects Client to Broker
-    fun connectToBroker() {
-            try {
-                val token = client.connect()
-                token.actionCallback = object : IMqttActionListener {
-                    override fun onSuccess(asyncActionToken: IMqttToken) {
-                        connectionToBroker.postValue("SUCCESS")
-                    }
-
-                    override fun onFailure(asyncActionToken: IMqttToken, exception: Throwable) {
-                        // Something went wrong e.g. connection timeout or firewall problems
-                        connectionToBroker.postValue("FAILURE")
-                    }
-                }
-            } catch (e: MqttException) {
-                e.printStackTrace()
-            }
-
-    }
-
-    //SetCallback Method to receive Messages and save them to DB
-    fun setCallBackForPushMessages() {
-        //Set a Callback method to handle the received messages
-        client.setCallback(object: MqttCallback {
-            override fun connectionLost(cause: Throwable?) {
-                //Toast.makeText(context, "ConnectionLost Message: ${cause.toString()}", Toast.LENGTH_LONG).show()
-                messageReceived.postValue("FAILURE")
-
-            }
-
-            override fun messageArrived(topic: String?, message: MqttMessage?) {
-                messageReceived.postValue("SUCCESS")
-                val device = specificDevice.value
-                payload.postValue(message.toString())
-                device!!.time = message.toString()
-                update(device)
-
-            }
-
-            override fun deliveryComplete(token: IMqttDeliveryToken?) {
-                TODO("Not yet implemented")
-            }
-
-
-        })
     }
 
     //Disconnect from client if the VW is destroyed
     override fun onCleared() {
         super.onCleared()
-        if (client.isConnected) {
-            client.disconnect()
+        try {
+            if (client.isConnected) {
+                client.disconnect()
+            }
+        } catch (e1: UninitializedPropertyAccessException) {
         }
     }
 

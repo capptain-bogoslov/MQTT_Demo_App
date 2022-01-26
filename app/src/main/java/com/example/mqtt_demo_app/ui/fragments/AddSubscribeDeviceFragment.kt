@@ -1,6 +1,7 @@
 package com.example.mqtt_demo_app.ui.fragments
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +13,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.coroutineScope
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import com.example.mqtt_demo_app.R
 import com.example.mqtt_demo_app.ui.DeviceViewModel
 import com.example.mqtt_demo_app.databinding.FragmentAddDeviceBinding
@@ -35,8 +37,6 @@ class AddDeviceFragment : Fragment() {
     private var _binding: FragmentAddDeviceBinding? = null
     //Get the value but once assigned you can't assign it to something else
     private val binding get() = _binding!!
-    //Holds an Instance of Mqtt client class
-    private lateinit var mqttClient2 : MqttClient2
 
     //Variables
     private var deviceId: Int = 0
@@ -90,7 +90,7 @@ class AddDeviceFragment : Fragment() {
         val unsubscribeButton = binding.unsubscribeButton
 
         //Get the MqttAndroidClient to Connect to MQTT Broker
-        val client = viewModel.getMqttAndroidClient()
+        val mqttClient = viewModel.getMqttAndroidClient()
 
         //Set the values for the layouts
         topicIdEditText.setText(topicId)
@@ -181,14 +181,15 @@ class AddDeviceFragment : Fragment() {
 
         //Listener for SUBSCRIBE Button that subscribes the Android Client to the Topic in MQTT Broker
         subscribeButton.setOnClickListener {
+            //Get topic
+            val topic = topicIdEditText.text.toString()
 
-            //Subscribe User to Device if not subscribed
-                val topic = topicIdEditText.text.toString()
-                val qos = 1
-                try {
-                    val subToken = client.subscribe(topic, qos)
-                    subToken.actionCallback = object : IMqttActionListener {
-                        override fun onSuccess(asyncActionToken: IMqttToken) {
+            //Check if there is a connection and subscribe
+            if (mqttClient.isConnected()) {
+                mqttClient.subscribe(topic,
+                    1,
+                    object : IMqttActionListener {
+                        override fun onSuccess(asyncActionToken: IMqttToken?) {
 
                             viewModel.setSubscribed()
                             view.findNavController()
@@ -202,45 +203,40 @@ class AddDeviceFragment : Fragment() {
                                 )
                         }
 
-                        override fun onFailure(
-                            asyncActionToken: IMqttToken,
-                            exception: Throwable
-                        ) {
-                            // The subscription could not be performed, maybe the user was not
-                            // authorized to subscribe on the specified topic e.g. using wildcards
+                        override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+                            Log.d(this.javaClass.name, "Failed to subscribe: $topic")
                         }
-                    }
-                } catch (e: MqttException) {
-                    e.printStackTrace()
-                }
-
+                    })
+            } else {
+                findNavController().navigate(AddDeviceFragmentDirections.actionAddDeviceFragmentToConnectToBrokerFragment("No connection available, Please Connect Again!"))
+                Log.d(this.javaClass.name, "Impossible to subscribe, no server connected")
+            }
         }
 
         //Listener for UNSUBSCRIBE Button that unsubscribes Android Client from the Topic in MQTT Broker
         unsubscribeButton.setOnClickListener {
 
-                val topic = topicIdEditText.text.toString()
-                try {
-                    val unsubToken = client.unsubscribe(topic)
-                    unsubToken.actionCallback = object : IMqttActionListener {
-                        override fun onSuccess(asyncActionToken: IMqttToken) {
-                            // The subscription could successfully be removed from the client
+            //Get topic
+            val topic = topicIdEditText.text.toString()
+
+            //Check if there is a connection and unsubscribe
+            if (mqttClient.isConnected()) {
+                mqttClient.unsubscribe( topic,
+                    object : IMqttActionListener {
+                        override fun onSuccess(asyncActionToken: IMqttToken?) {
                             viewModel.setUnsubscribed()
                             Toast.makeText(context, "You are now unsubscribed to that topic!", Toast.LENGTH_LONG).show()
+
                         }
 
-                        override fun onFailure(
-                            asyncActionToken: IMqttToken,
-                            exception: Throwable
-                        ) {
-                            // some error occurred, this is very unlikely as even if the client
-                            // did not had a subscription to the topic the unsubscribe action
-                            // will be successfully
+                        override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+                            Log.d(this.javaClass.name, "Failed to unsubscribe: $topic")
                         }
-                    }
-                } catch (e: MqttException) {
-                    e.printStackTrace()
-                }
+                    })
+            } else {
+                Log.d(this.javaClass.name, "Impossible to unsubscribe, no server connected")
+            }
+
         }//end Unsubscribe
     }
 

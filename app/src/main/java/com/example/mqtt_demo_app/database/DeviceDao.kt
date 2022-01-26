@@ -35,8 +35,6 @@ interface DeviceDao {
     @Query("SELECT * FROM devices WHERE id= :deviceId")
     fun getDevice(deviceId: Int): Flow<Device>
 
-
-
   /*  //Get time for a specific device in DB
     @Query("SELECT time FROM devices WHERE id = :deviceId")
     fun getTime(deviceId: Int): Flow<Device>
