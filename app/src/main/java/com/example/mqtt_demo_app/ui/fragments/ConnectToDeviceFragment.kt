@@ -1,8 +1,6 @@
 package com.example.mqtt_demo_app.ui.fragments
 
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
+
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -27,7 +25,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.eclipse.paho.client.mqttv3.IMqttActionListener
 import org.eclipse.paho.client.mqttv3.IMqttToken
-import org.eclipse.paho.client.mqttv3.MqttClient
 
 /**
  * ConnectToDeviceFragment.kt-------- Fragment where a User can see the connected Devices and Add another one in DB
@@ -50,7 +47,6 @@ class ConnectToDeviceFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
         //Get arguments from Previous Arguments
         arguments?.let {
             message = it.getString("message").toString()
@@ -61,10 +57,6 @@ class ConnectToDeviceFragment : Fragment() {
 
         //Get the MqttAndroidClient to Connect to MQTT Broker
         val mqttClient = viewModel.getMqttAndroidClient()
-
-
-        //If no Internet Access disconnect Client and return to Connect to Broker Fragment
-        if (!checkInternetConnection(requireActivity())) disconnectMqttClient(mqttClient)
 
         //Handle the Back Button Press to disconnect and return to Home
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
@@ -128,45 +120,6 @@ class ConnectToDeviceFragment : Fragment() {
         }
 
     }
-
-    //Function that will check Internet connectivity
-    private fun checkInternetConnection(context: Context): Boolean {
-
-            // register activity with the connectivity manager service
-            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
-
-            // NetworkCapabilities to check what type of network has the internet connection only above Android M
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
-                // Returns a Network object corresponding to
-                // the currently active default data network.
-                val network = connectivityManager.activeNetwork ?: return false
-
-                // Representation of the capabilities of an active network.
-                val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
-
-                return when {
-                    // Indicates this network uses a Wi-Fi transport,
-                    // or WiFi has network connectivity
-                    activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
-
-                    // Indicates this network uses a Cellular transport. or
-                    // Cellular has network connectivity
-                    activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
-
-                    // else return false
-                    else -> false
-                }
-            } else {
-                // if the android version is below M
-                @Suppress("DEPRECATION") val networkInfo =
-                    connectivityManager.activeNetworkInfo ?: return false
-                @Suppress("DEPRECATION")
-                return networkInfo.isConnected
-            }
-    }
-
 
     fun disconnectMqttClient(mqttClient: MqttClient2) {
         if (mqttClient.isConnected()) {
