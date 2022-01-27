@@ -96,6 +96,11 @@ class MqttClient2(context: Context?,
         return mqttClient.isConnected
     }
 
+    //Set Callback to an MQTT Client IOT Receive Push Messages from another MQTT Client
+    fun setCallBack(callback: MqttCallback) {
+        mqttClient.setCallback(callback)
+    }
+
     //Subscribe to a topic
     fun subscribe(topic:        String,
                   qos:          Int                 = 1,

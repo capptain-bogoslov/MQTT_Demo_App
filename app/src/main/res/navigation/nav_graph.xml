@@ -60,6 +60,7 @@
             app:destination="@id/connectToBrokerFragment"
             app:popUpTo="@id/connectToBrokerFragment"
             app:popUpToInclusive="true"/>
+
     </fragment>
     <fragment
         android:id="@+id/connectToDeviceFragment"
@@ -73,6 +74,9 @@
             android:name="message"
             app:argType="string"
             app:nullable="true" />
+        <action
+            android:id="@+id/action_connectToDeviceFragment_to_connectToBrokerFragment"
+            app:destination="@id/connectToBrokerFragment" />
     </fragment>
     <fragment
         android:id="@+id/monitorMqttClientFragment"
@@ -92,5 +96,8 @@
         <argument
             android:name="deviceId"
             app:argType="integer" />
+        <action
+            android:id="@+id/action_monitorMqttClientFragment_to_connectToBrokerFragment"
+            app:destination="@id/connectToBrokerFragment" />
     </fragment>
 </navigation>

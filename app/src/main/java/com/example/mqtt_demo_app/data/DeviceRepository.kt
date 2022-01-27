@@ -35,6 +35,7 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
         return deviceDao.getDevice(id)
     }
 
+
     //Save values to DB
 
    /* //Get if a User is Subscribed to Device
