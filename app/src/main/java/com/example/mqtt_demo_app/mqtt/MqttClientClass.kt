@@ -2,6 +2,7 @@ package com.example.mqtt_demo_app.mqtt
 
 import android.content.Context
 import android.util.Log
+import dagger.hilt.android.qualifiers.ApplicationContext
 import org.eclipse.paho.android.service.MqttAndroidClient
 import org.eclipse.paho.client.mqttv3.*
 
@@ -11,9 +12,9 @@ import org.eclipse.paho.client.mqttv3.*
  * ----------------- developed by Theologos Batsioulas 22/01/2022 for MQTT Demo App
  */
 
-class MqttClient2(context: Context?,
-                  serverURI: String,
-                  clientID: String = "") {
+class MqttClientClass(context: Context?,
+                      serverURI: String,
+                      clientID: String = "") {
     private var mqttClient = MqttAndroidClient(context, serverURI, clientID)
     private val defaultCbConnect = object : IMqttActionListener {
         override fun onSuccess(asyncActionToken: IMqttToken?) {
@@ -147,4 +148,21 @@ class MqttClient2(context: Context?,
             e.printStackTrace()
         }
     }
+}
+
+//Declare singleton object IOT create only one object with global access that exposes the lazy-initialized Retrofit service
+object MqttClientApi{
+
+    private lateinit var client : MqttClientClass
+    //Method to create a unique MqttClientClass OBJ
+    fun createMqttAndroidClient(context: Context?, serverURI: String, clientID: String = ""): MqttClientClass {
+        client = MqttClientClass(context, serverURI, clientID)
+        return client
+    }
+
+    //Return MqttClientClass OBJ
+    fun getMqttClient(): MqttClientClass {
+        return client
+    }
+
 }

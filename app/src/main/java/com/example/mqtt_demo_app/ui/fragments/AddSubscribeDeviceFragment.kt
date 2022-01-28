@@ -17,7 +17,6 @@ import androidx.navigation.fragment.findNavController
 import com.example.mqtt_demo_app.R
 import com.example.mqtt_demo_app.ui.DeviceViewModel
 import com.example.mqtt_demo_app.databinding.FragmentAddDeviceBinding
-import com.example.mqtt_demo_app.mqtt.MqttClient2
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.eclipse.paho.client.mqttv3.*
@@ -208,7 +207,7 @@ class AddDeviceFragment : Fragment() {
                         }
                     })
             } else {
-                findNavController().navigate(AddDeviceFragmentDirections.actionAddDeviceFragmentToConnectToBrokerFragment("No connection available, Please Connect Again!"))
+                findNavController().navigate(R.id.action_addDeviceFragment_to_connectToBrokerFragment)
                 Log.d(this.javaClass.name, "Impossible to subscribe, no server connected")
             }
         }

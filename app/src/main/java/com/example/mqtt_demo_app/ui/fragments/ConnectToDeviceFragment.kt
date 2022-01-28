@@ -3,7 +3,6 @@ package com.example.mqtt_demo_app.ui.fragments
 
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -20,17 +19,17 @@ import com.example.mqtt_demo_app.R
 import com.example.mqtt_demo_app.adapters.DeviceListAdapter
 import com.example.mqtt_demo_app.ui.DeviceViewModel
 import com.example.mqtt_demo_app.databinding.FragmentConnectToDeviceBinding
-import com.example.mqtt_demo_app.mqtt.MqttClient2
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
-import org.eclipse.paho.client.mqttv3.IMqttActionListener
-import org.eclipse.paho.client.mqttv3.IMqttToken
+
 
 /**
  * ConnectToDeviceFragment.kt-------- Fragment where a User can see the connected Devices and Add another one in DB
  * ----------------- developed by Theologos Batsioulas 22/01/2022 for MQTT Demo App
  */
 
+@ExperimentalCoroutinesApi
 @AndroidEntryPoint
 class ConnectToDeviceFragment : Fragment() {
 
@@ -55,13 +54,10 @@ class ConnectToDeviceFragment : Fragment() {
         //Display Toast if there is a message
         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
 
-        //Get the MqttAndroidClient to Connect to MQTT Broker
-        val mqttClient = viewModel.getMqttAndroidClient()
-
         //Handle the Back Button Press to disconnect and return to Home
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-               disconnectMqttClient(mqttClient)
+               viewModel.disconnectFromMqttBroker()
             }
         })
 
@@ -80,6 +76,15 @@ class ConnectToDeviceFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        //Observe if User is disconnected properly
+        viewModel.connected.observe(viewLifecycleOwner, {value ->
+            if (value == false) {
+                    findNavController()
+                        .navigate(R.id.action_connectToDeviceFragment_to_connectToBrokerFragment)
+                }
+            })
+
+        //RecyclerView reference
         val recyclerView = binding.recyclerView
         recyclerView.layoutManager = LinearLayoutManager(context)
 
@@ -119,29 +124,6 @@ class ConnectToDeviceFragment : Fragment() {
             view.findNavController().navigate(action)
         }
 
-    }
-
-    fun disconnectMqttClient(mqttClient: MqttClient2) {
-        if (mqttClient.isConnected()) {
-            // Disconnect from MQTT Broker
-            mqttClient.disconnect(object : IMqttActionListener {
-                override fun onSuccess(asyncActionToken: IMqttToken?) {
-
-                    Toast.makeText(context, "MQTT Disconnection success", Toast.LENGTH_SHORT).show()
-
-                    // Disconnection success, come back to Connect Fragment
-                    findNavController().navigate(R.id.action_connectToDeviceFragment_to_connectToBrokerFragment)
-                }
-
-                override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
-                    Log.d(this.javaClass.name, "Failed to disconnect")
-                }
-            })
-        } else {
-            //Navigate to Start if there is no connection to server
-            findNavController().navigate(ConnectToDeviceFragmentDirections.actionConnectToDeviceFragmentToConnectToBrokerFragment("No connection available, Please Connect Again!"))
-            Log.d(this.javaClass.name, "Impossible to disconnect, no server connected")
-        }
     }
 
     override fun onDestroyView() {

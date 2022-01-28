@@ -14,10 +14,7 @@
         <action
             android:id="@+id/action_connectToBrokerFragment_to_connectToDeviceFragment"
             app:destination="@id/connectToDeviceFragment" />
-        <argument
-            android:name="message"
-            app:argType="string"
-            app:nullable="true" />
+
     </fragment>
     <fragment
         android:id="@+id/addDeviceFragment"

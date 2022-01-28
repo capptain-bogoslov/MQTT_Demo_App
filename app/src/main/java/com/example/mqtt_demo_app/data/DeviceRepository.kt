@@ -2,7 +2,13 @@ package com.example.mqtt_demo_app.data
 
 import com.example.mqtt_demo_app.database.Device
 import com.example.mqtt_demo_app.database.DeviceDao
-import kotlinx.coroutines.flow.Flow
+import com.example.mqtt_demo_app.mqtt.MqttClientApi
+import com.example.mqtt_demo_app.mqtt.MqttClientClass
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.*
+import org.eclipse.paho.client.mqttv3.*
 import javax.inject.Inject
 
 /**
@@ -13,6 +19,8 @@ import javax.inject.Inject
 class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
 
     val allDevices: Flow<List<Device>> = deviceDao.getAllDevices()
+    //Holds an Instance of Mqtt client class
+    private val mqttClient : MqttClientClass = MqttClientApi.getMqttClient()
 
 
     //Insert Device to DB
@@ -34,6 +42,49 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
     fun getDevice(id: Int): Flow<Device> {
         return deviceDao.getDevice(id)
     }
+
+
+    //Return a Flow with the result of the connection with MQTT Broker
+    @ExperimentalCoroutinesApi
+    fun connectToMqttBroker(username: String?, password: String?): Flow<Boolean> = callbackFlow {
+        //Set the Listener
+        val mqttActionListener = object: IMqttActionListener {
+            override fun onSuccess(asyncActionToken: IMqttToken?) {
+                trySend(true)
+            }
+
+            override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+                trySend(false)
+            }
+        }
+
+        //Connect and attach the Listener
+        mqttClient.connect(username?:"", password?:"", mqttActionListener)
+
+        awaitClose{ channel.close() }
+    }
+
+
+
+    //Return a Flow with the result of disconnect from MQTT Broker
+    @ExperimentalCoroutinesApi
+    fun disconnectFromMqttBroker(): Flow<Boolean> = callbackFlow {
+        //Set the Listener
+        val mqttActionListener = object: IMqttActionListener {
+            override fun onSuccess(asyncActionToken: IMqttToken?) {
+                trySend(false)
+            }
+
+            override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+                trySend(false)
+            }
+        }
+
+        mqttClient.disconnect(mqttActionListener)
+
+        awaitClose { channel.close() }
+    }
+
 
 
     //Save values to DB

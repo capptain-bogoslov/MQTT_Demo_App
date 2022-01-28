@@ -13,7 +13,7 @@ import javax.inject.Singleton
 
 /**
  * AppModule.kt-------- Object class that creates an instance of DeviceDatabase
- * ----------------- developed by Theologos Batsioulas 20/01/2022 for MQTT Demo App
+ * ----------------- developed by Theo Batsioulas 20/01/2022 for MQTT Demo App
  */
 
 @Module
