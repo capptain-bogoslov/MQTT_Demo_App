@@ -1,19 +1,21 @@
 package com.example.mqtt_demo_app.data
 
+import android.util.Log
+import android.widget.Toast
 import com.example.mqtt_demo_app.database.Device
 import com.example.mqtt_demo_app.database.DeviceDao
 import com.example.mqtt_demo_app.mqtt.MqttClientApi
 import com.example.mqtt_demo_app.mqtt.MqttClientClass
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import org.eclipse.paho.client.mqttv3.*
 import javax.inject.Inject
+import kotlin.coroutines.resume
 
 /**
  * DeviceRepository.kt-------- Repository class that provides data access for the rest of the app
- * ----------------- developed by Theologos Batsioulas 20/01/2022 for MQTT Demo App
+ * ----------------- developed by Theo Batsioulas 20/01/2022 for MQTT Demo App
  */
 
 class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
@@ -21,7 +23,6 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
     val allDevices: Flow<List<Device>> = deviceDao.getAllDevices()
     //Holds an Instance of Mqtt client class
     private val mqttClient : MqttClientClass = MqttClientApi.getMqttClient()
-
 
     //Insert Device to DB
     suspend fun insert(device: Device) {
@@ -41,6 +42,21 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
     //Get specific device from DB
     fun getDevice(id: Int): Flow<Device> {
         return deviceDao.getDevice(id)
+    }
+
+    //Get Time from db
+    fun getTime(id: Int): Flow<String> {
+        return deviceDao.getTime(id)
+    }
+
+    //Get if a User is SUBSCRIBED to a Device
+    fun isSubscribed(id: Int): Flow<Boolean> {
+        return deviceDao.getIfSubscribed(id)
+    }
+
+    //Mark a Device as "Subscribed
+    suspend fun changeSubscribed(deviceId: Int, subscribed: Boolean) {
+        deviceDao.changeSubscribed(deviceId, subscribed)
     }
 
 
@@ -64,8 +80,6 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
         awaitClose{ channel.close() }
     }
 
-
-
     //Return a Flow with the result of disconnect from MQTT Broker
     @ExperimentalCoroutinesApi
     fun disconnectFromMqttBroker(): Flow<Boolean> = callbackFlow {
@@ -85,6 +99,98 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
         awaitClose { channel.close() }
     }
 
+
+    //Set a Callback for mqttClient IOT receive Messages
+    private suspend fun setCallbackToClient(): String = suspendCancellableCoroutine { continuation ->
+        val mqttClientCallback = object : MqttCallback {
+            override fun messageArrived(topic: String?, message: MqttMessage?) {
+                val msg = "MESSAGE 108: ${message.toString()} from topic: $topic"
+                continuation.resume(message.toString())
+
+            }
+
+            //Notify when connection Lost
+            override fun connectionLost(cause: Throwable?) {
+                continuation.resume("ConnectionLost")
+            }
+
+            override fun deliveryComplete(token: IMqttDeliveryToken?) {
+                continuation.resume("DeliveryComplete")
+                Log.d(this.javaClass.name, "Delivery complete")
+            }
+        }
+
+        mqttClient.setCallBack(mqttClientCallback)
+    }
+
+    //Save Message to DB
+    suspend fun saveMessageToDB(deviceId: Int){
+        coroutineScope {
+            val message = setCallbackToClient()
+            deviceDao.updateTime(message, deviceId)
+        }
+    }
+
+    //Function that subscribes a User to a topic IOT receive Publish Messages from another MQTT Client
+    suspend fun subscribeToTopic(topic: String): Boolean = suspendCancellableCoroutine { continuation ->
+
+        //Subscribe to topic
+        mqttClient.subscribe(topic,
+            1,
+            object : IMqttActionListener {
+                override fun onSuccess(asyncActionToken: IMqttToken?) {
+                    continuation.resume(true)
+                }
+
+                override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+                    continuation.resume(false)
+                }
+            })
+
+    }
+
+    //Function that UNSUBSCRIBES  User from Device Topic
+    suspend fun unsubscribeToTopic(topic: String): Boolean = suspendCancellableCoroutine { continuation ->
+
+        //Unsubscribe from topic
+        mqttClient.unsubscribe( topic,
+            object : IMqttActionListener {
+                override fun onSuccess(asyncActionToken: IMqttToken?) {
+                    continuation.resume(false)
+                }
+
+                override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+                    continuation.resume(false)
+                }
+            })
+
+
+    }
+/*   suspend fun unsubscribeToTopic(topic: String, deviceId: Int) {
+
+        var isSubscribed = false
+
+        coroutineScope {
+
+            async {
+
+                mqttClient.unsubscribe( topic,
+                    object : IMqttActionListener {
+                        override fun onSuccess(asyncActionToken: IMqttToken?) {
+                            isSubscribed = false
+                        }
+
+                        override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+                            isSubscribed = false
+                        }
+                    })
+                changeSubscribed(deviceId, isSubscribed)
+
+            }.await()
+
+        }
+
+    }*/
 
 
     //Save values to DB

@@ -35,6 +35,26 @@ interface DeviceDao {
     @Query("SELECT * FROM devices WHERE id= :deviceId")
     fun getDevice(deviceId: Int): Flow<Device>
 
+    //Get if a User is SUBSCRIBED to a DEVICE
+    @Query("SELECT subscribed FROM devices WHERE id= :deviceId")
+    fun getIfSubscribed(deviceId: Int): Flow<Boolean>
+
+    //Mark a Device as SUBSCRIBED || UNSUBSCRIBED
+    @Query("UPDATE devices SET subscribed= :value WHERE id= :deviceId")
+    suspend fun changeSubscribed(deviceId: Int, value: Boolean)
+
+    //Unsubscribe from All Devices
+    @Query("UPDATE devices SET subscribed= :value")
+    fun unsubscribeAll(value: Boolean)
+
+    //Save Message to DB
+    @Query("UPDATE devices SET time= :time WHERE id= :deviceId")
+    suspend fun updateTime(time: String, deviceId: Int)
+
+    //Get Time from DB
+    @Query("SELECT time FROM devices WHERE id= :deviceId")
+    fun getTime(deviceId: Int): Flow<String>
+
   /*  //Get time for a specific device in DB
     @Query("SELECT time FROM devices WHERE id = :deviceId")
     fun getTime(deviceId: Int): Flow<Device>

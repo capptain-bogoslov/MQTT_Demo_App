@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 
 /**
  * ConnectToDeviceFragment.kt-------- Fragment where a User can see the connected Devices and Add another one in DB
- * ----------------- developed by Theologos Batsioulas 22/01/2022 for MQTT Demo App
+ * ----------------- developed by Theo Batsioulas 22/01/2022 for MQTT Demo App
  */
 
 @ExperimentalCoroutinesApi

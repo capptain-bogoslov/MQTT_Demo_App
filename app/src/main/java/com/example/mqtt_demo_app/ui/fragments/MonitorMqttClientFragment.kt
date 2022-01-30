@@ -21,7 +21,7 @@ import kotlin.math.abs
 
 /**
  * MonitorMqttClientFragment.kt-------- Fragment that will receive Push messages from another MQTT Client(Device) through MQTT Broker
- * ----------------- developed by Theologos Batsioulas 21/01/2022 for MQTT Demo App
+ * ----------------- developed by Theo Batsioulas 21/01/2022 for MQTT Demo App
  */
 
 class   MonitorMqttClientFragment : Fragment() {
@@ -69,10 +69,24 @@ class   MonitorMqttClientFragment : Fragment() {
         val time = binding.timeTextView
         val progressBar = binding.progressBar
 
-        time.text = viewModel.getSpecificDevice().value!!.time
+        //time.text = viewModel.getSpecificDevice().value!!.time
+
+        //Create the Callback to receive the Published messages from Device
+        viewModel.setCallbackToClient()
+
+        //Observe the time value that is saved in DB
+        viewModel.time.observe(viewLifecycleOwner, {value->
+            if (value == "-1") {
+
+            } else {
+                time.text = value
+            }
+        })
 
         //Get the MqttAndroidClient to Connect to MQTT Broker
-        val mqttClient = viewModel.getMqttAndroidClient()
+        //val mqttClient = viewModel.getMqttAndroidClient()
+
+/*
 
         //Set a Callback method to handle the received messages
         mqttClient.setCallBack(object: MqttCallback {
@@ -106,6 +120,7 @@ class   MonitorMqttClientFragment : Fragment() {
                 TODO("Not yet implemented")
             }
         })
+        */
     }
 
 }

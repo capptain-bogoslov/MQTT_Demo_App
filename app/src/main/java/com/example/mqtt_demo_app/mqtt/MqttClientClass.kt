@@ -9,7 +9,7 @@ import org.eclipse.paho.client.mqttv3.*
 
 /**
  * MqttClient.kt-------- Class that is the wrapper of the Paho Library that implements the main functionality of the MQTT Transfer Protocol
- * ----------------- developed by Theologos Batsioulas 22/01/2022 for MQTT Demo App
+ * ----------------- developed by Theo Batsioulas 22/01/2022 for MQTT Demo App
  */
 
 class MqttClientClass(context: Context?,

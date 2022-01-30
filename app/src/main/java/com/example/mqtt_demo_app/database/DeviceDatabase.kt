@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 
 /**
  * DeviceDatabase.kt-------- App Database class that is the main point for connection with DB and provide access to a single instance of DB
- * ----------------- developed by Theologos Batsioulas 20/01/2022 for MQTT Demo App
+ * ----------------- developed by Theo Batsioulas 20/01/2022 for MQTT Demo App
  */
 
 @Database(entities = [Device::class], version = 1, exportSchema = false)

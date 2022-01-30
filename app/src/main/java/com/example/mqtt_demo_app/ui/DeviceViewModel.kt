@@ -12,13 +12,11 @@ import javax.inject.Inject
 
 /**
  * DeviceViewModel.kt-------- ViewModel class that contains the data that are exposed to UI
- * ----------------- developed by Theologos Batsioulas 20/01/2022 for MQTT Demo App
+ * ----------------- developed by Theo Batsioulas 20/01/2022 for MQTT Demo App
  */
 
 @HiltViewModel
 class DeviceViewModel @Inject constructor(private val repository: DeviceRepository): ViewModel() {
-
-
 
     private val allDevices: LiveData<List<Device>> = repository.allDevices.asLiveData()
     private val deviceId: MutableLiveData<Int> = MutableLiveData()
@@ -27,6 +25,12 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     private val clientSubscribed: MutableLiveData<Boolean> = MutableLiveData(false)
     private val specificDevice: LiveData<Device> = Transformations.switchMap(deviceId) { device_id ->
         repository.getDevice(device_id).asLiveData()
+    }
+    val isSubscribed: LiveData<Boolean> = Transformations.switchMap(deviceId) { device_id ->
+        repository.isSubscribed(device_id).asLiveData()
+    }
+    val time: LiveData<String> = Transformations.switchMap(deviceId) { device_id ->
+        repository.getTime(device_id).asLiveData()
     }
 
     //Holds an Instance of Mqtt client class
@@ -46,8 +50,8 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
                 connected.postValue(value)
             }
         }
-
     }
+
     //Connect to MQTT Broker and update "connected" value
     @ExperimentalCoroutinesApi
     fun disconnectFromMqttBroker() {
@@ -58,6 +62,31 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
       }
     }
 
+    //Subscribe to a Device with the specific topic
+    fun subscribeToDevice(topic: String) {
+
+        viewModelScope.launch(Dispatchers.IO) {
+            //repository.markAsSubscribed(specificDevice.value!!.id, true)
+            val result = repository.subscribeToTopic(topic)
+            repository.changeSubscribed(specificDevice.value!!.id, result)
+        }
+    }
+
+    //Unsubscribe to Device
+    fun unsubscribeToDevice(topic: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+
+            val result = repository.unsubscribeToTopic(topic)
+            repository.changeSubscribed(specificDevice.value!!.id, result)
+        }
+    }
+
+    //Set Callback to Listen to Published Messages and save them to DB
+    fun setCallbackToClient() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.saveMessageToDB(specificDevice.value!!.id)
+        }
+    }
 
     //get All Devices
     fun getAllDevices(): LiveData<List<Device>> {
@@ -65,17 +94,18 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
         return allDevices
     }
 
+    //change value of connected
+
+
     //get a Specific Device
     fun getSpecificDevice(): LiveData<Device> {
         return specificDevice
     }
 
-
     //set the value of a specific device
     fun setSpecificDevice(id: Int) {
         deviceId.value = id
     }
-
 
     //Updating values of existing Devices
     fun updateDeviceValues(device: Device, name: String, brand: String, type:String, topic: String): Device {
@@ -93,6 +123,7 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
             deviceBrand = brand,
             deviceType = type,
             topicId = topic,
+            subscribed = false,
             temperature = 0.0,
             time = "0"
         )
@@ -111,6 +142,7 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
 
     //Mark an Android Client as Subscribed
     fun setSubscribed() {
+
         clientSubscribed.postValue(true)
     }
 

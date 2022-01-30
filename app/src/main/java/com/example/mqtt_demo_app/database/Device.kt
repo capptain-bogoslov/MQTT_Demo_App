@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 
 /**
  * Device.kt-------- Entity class that represent Room database table
- * ----------------- developed by Theologos Batsioulas 20/01/2022 for MQTT Demo App
+ * ----------------- developed by Theo Batsioulas 20/01/2022 for MQTT Demo App
  */
 
 //Create table in Room DB
@@ -17,6 +17,7 @@ data class Device(
     @ColumnInfo(name = "deviceBrand") var deviceBrand: String,
     @ColumnInfo(name = "deviceType") var deviceType: String,
     @ColumnInfo(name = "topicId") var topicId: String,
+    @ColumnInfo(name = "subscribed") var subscribed: Boolean,
     @ColumnInfo(name = "time") var time: String,
     @ColumnInfo(name = "temperature") var temperature: Double,
 )

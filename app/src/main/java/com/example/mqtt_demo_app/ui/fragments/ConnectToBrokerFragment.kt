@@ -19,7 +19,7 @@ import org.eclipse.paho.client.mqttv3.*
 
 /**
  * ConnectToBrokerFragment.kt-------- Fragment that connects to MQTT Broker with username and password
- * ----------------- developed by Theologos Batsioulas 21/01/2022 for MQTT Demo App
+ * ----------------- developed by Theo Batsioulas 21/01/2022 for MQTT Demo App
  */
 
 const val MQTT_SERVER_URI       = "tcp://broker.hivemq.com:1883"

@@ -1,7 +1,6 @@
 package com.example.mqtt_demo_app.ui.fragments
 
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.SpinnerAdapter
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.coroutineScope
@@ -17,16 +17,15 @@ import androidx.navigation.fragment.findNavController
 import com.example.mqtt_demo_app.R
 import com.example.mqtt_demo_app.ui.DeviceViewModel
 import com.example.mqtt_demo_app.databinding.FragmentAddDeviceBinding
+import com.example.mqtt_demo_app.mqtt.MqttClientApi
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import org.eclipse.paho.client.mqttv3.*
 
 
 /**
  * AddSubscribeDeviceFragment.kt-------- Fragment where to Add, Update & Delete a Device from DB & Subscribe || Unsubscribe to it to receive Push Notifications
- * ----------------- developed by Theologos Batsioulas 22/01/2022 for MQTT Demo App
+ * ----------------- developed by Theo Batsioulas 22/01/2022 for MQTT Demo App
  */
-
 
 
 @AndroidEntryPoint
@@ -34,6 +33,7 @@ class AddDeviceFragment : Fragment() {
 
     //Get nullable reference to FragmentUserBindingClass
     private var _binding: FragmentAddDeviceBinding? = null
+
     //Get the value but once assigned you can't assign it to something else
     private val binding get() = _binding!!
 
@@ -66,7 +66,7 @@ class AddDeviceFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         // Inflate the view, set the value of binding and return the root view
         _binding = FragmentAddDeviceBinding.inflate(inflater, container, false)
         return binding.root
@@ -88,8 +88,6 @@ class AddDeviceFragment : Fragment() {
         val subscribeButton = binding.subscribeButton
         val unsubscribeButton = binding.unsubscribeButton
 
-        //Get the MqttAndroidClient to Connect to MQTT Broker
-        val mqttClient = viewModel.getMqttAndroidClient()
 
         //Set the values for the layouts
         topicIdEditText.setText(topicId)
@@ -97,21 +95,41 @@ class AddDeviceFragment : Fragment() {
         deviceBrandEditText.setText(deviceBrand)
         typeSpinner.setSelection(resources.getStringArray(R.array.deviceTypes).indexOf(type))
 
-        //Hide Layout for Subscribe if the User Adds a new Device
+        //If User Add a Device for the first time in DB hide Layout for Subscribe Button
         if (type == "ADD") subscribeButton.isVisible = false
+        //If Device is Saved in DB observe the value for SUBSCRIBE
+        if (type == "EDIT") {
+            //Observe if the User is subscribed to device
+            viewModel.isSubscribed.observe(viewLifecycleOwner, { value ->
+                if (value) {
+                    subscribeButton.text = getString(R.string.monitor)
+                    subscribeButton.setBackgroundColor(
+                        ContextCompat.getColor(
+                            requireContext(),
+                            R.color.orange
+                        )
+                    )
+                    unsubscribeButton.visibility = View.VISIBLE
+                } else {
+                    subscribeButton.text = getString(R.string.subscribe)
+                    subscribeButton.setBackgroundColor(
+                        ContextCompat.getColor(
+                            requireContext(),
+                            R.color.colorPrimary
+                        )
+                    )
+                    unsubscribeButton.visibility = View.GONE
+                }
+            })
+        }
 
-        //Observe if the User is already Subscribed toa Device and the Connection is Active to display the Layouts
-        viewModel.isClientSubscribed().observe(viewLifecycleOwner, { subscribed ->
-            if (subscribed) {
-                subscribeButton.text = getString(R.string.monitor)
-                subscribeButton.setBackgroundColor(resources.getColor(R.color.orange))
-                unsubscribeButton.visibility = View.VISIBLE
-            } else {
-                subscribeButton.text = getString(R.string.subscribe)
-                subscribeButton.setBackgroundColor(resources.getColor(R.color.colorPrimary))
-                unsubscribeButton.visibility = View.GONE
+
+        //Go to Connect to Broker Fragment when Connection Lost
+        viewModel.connected.observe(viewLifecycleOwner, { value ->
+            if (!value) {
+                Toast.makeText(context, "Connection Lost! Please connect again", Toast.LENGTH_LONG).show()
+                findNavController().navigate(R.id.action_addDeviceFragment_to_connectToBrokerFragment)
             }
-
         })
 
         //Put Values to Spinner
@@ -122,6 +140,7 @@ class AddDeviceFragment : Fragment() {
             )
         } as SpinnerAdapter
         typeSpinner.adapter = adapter
+
 
         //Button Listeners to handle Device
         saveUpdateButton.setOnClickListener {
@@ -140,8 +159,7 @@ class AddDeviceFragment : Fragment() {
                         )
                     )
 
-                    "EDIT" -> viewModel.
-                    getSpecificDevice().value?.let { it ->
+                    "EDIT" -> viewModel.getSpecificDevice().value?.let { it ->
                         //Update the value of Device with current value and then Update it in DB
                         viewModel.updateDeviceValues(
                             it,
@@ -180,61 +198,34 @@ class AddDeviceFragment : Fragment() {
 
         //Listener for SUBSCRIBE Button that subscribes the Android Client to the Topic in MQTT Broker
         subscribeButton.setOnClickListener {
-            //Get topic
-            val topic = topicIdEditText.text.toString()
 
-            //Check if there is a connection and subscribe
-            if (mqttClient.isConnected()) {
-                mqttClient.subscribe(topic,
-                    1,
-                    object : IMqttActionListener {
-                        override fun onSuccess(asyncActionToken: IMqttToken?) {
+            if (MqttClientApi.getMqttClient().isConnected()) {
+                viewModel.subscribeToDevice(topicIdEditText.text.toString())
 
-                            viewModel.setSubscribed()
-                            view.findNavController()
-                                .navigate(
-                                    AddDeviceFragmentDirections.actionAddDeviceFragmentToMonitorMqttClientFragment(
-                                        deviceId = deviceId,
-                                        deviceName = deviceName,
-                                        deviceType = deviceType,
-                                        deviceBrand = deviceBrand
-                                    )
-                                )
-                        }
-
-                        override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
-                            Log.d(this.javaClass.name, "Failed to subscribe: $topic")
-                        }
-                    })
+                //Navigate to next Fragment
+                view.findNavController()
+                    .navigate(
+                        AddDeviceFragmentDirections.actionAddDeviceFragmentToMonitorMqttClientFragment(
+                            deviceId = deviceId,
+                            deviceName = deviceName,
+                            deviceType = deviceType,
+                            deviceBrand = deviceBrand
+                        )
+                    )
             } else {
+                //There is NO CONNECTION to Broker
+                Toast.makeText(context, "Connection Lost! Please connect again", Toast.LENGTH_LONG).show()
+                //Navigate to start Destination to connect again
                 findNavController().navigate(R.id.action_addDeviceFragment_to_connectToBrokerFragment)
-                Log.d(this.javaClass.name, "Impossible to subscribe, no server connected")
+
             }
+
         }
 
         //Listener for UNSUBSCRIBE Button that unsubscribes Android Client from the Topic in MQTT Broker
         unsubscribeButton.setOnClickListener {
 
-            //Get topic
-            val topic = topicIdEditText.text.toString()
-
-            //Check if there is a connection and unsubscribe
-            if (mqttClient.isConnected()) {
-                mqttClient.unsubscribe( topic,
-                    object : IMqttActionListener {
-                        override fun onSuccess(asyncActionToken: IMqttToken?) {
-                            viewModel.setUnsubscribed()
-                            Toast.makeText(context, "You are now unsubscribed to that topic!", Toast.LENGTH_LONG).show()
-
-                        }
-
-                        override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
-                            Log.d(this.javaClass.name, "Failed to unsubscribe: $topic")
-                        }
-                    })
-            } else {
-                Log.d(this.javaClass.name, "Impossible to unsubscribe, no server connected")
-            }
+            viewModel.unsubscribeToDevice(topicIdEditText.text.toString())
 
         }//end Unsubscribe
     }
