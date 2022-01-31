@@ -1,21 +1,15 @@
 package com.example.mqtt_demo_app.ui.fragments
 
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.core.text.isDigitsOnly
 import androidx.fragment.app.activityViewModels
-import androidx.navigation.fragment.findNavController
-import com.example.mqtt_demo_app.R
 import com.example.mqtt_demo_app.ui.DeviceViewModel
 import com.example.mqtt_demo_app.databinding.FragmentMonitorMqttClientBinding
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
-import org.eclipse.paho.client.mqttv3.MqttCallback
-import org.eclipse.paho.client.mqttv3.MqttMessage
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.lang.NumberFormatException
 import kotlin.math.abs
 
@@ -25,6 +19,7 @@ import kotlin.math.abs
  * ----------------- developed by Theo Batsioulas 21/01/2022 for MQTT Demo App
  */
 
+@ExperimentalCoroutinesApi
 class   MonitorMqttClientFragment : Fragment() {
 
     //Get nullable reference to FragmentUserBindingClass
@@ -80,57 +75,18 @@ class   MonitorMqttClientFragment : Fragment() {
                 //There is NO CONNECTION to Broker
                 Toast.makeText(context, "Connection Lost! Please connect again", Toast.LENGTH_LONG).show()
                 //Navigate to start Destination to connect again
-                findNavController().navigate(R.id.action_monitorMqttClientFragment_to_connectToBrokerFragment)
+                //findNavController().navigate(R.id.action_monitorMqttClientFragment_to_connectToBrokerFragment)
+                time.text = "-"
 
             } else {
                 time.text = value
                 try {
-                    progressBar.progress = (abs(60-value.toInt()))
+                    progressBar.progress = (abs(60 -value.toInt()))
                 } catch (e1: NumberFormatException) {
                     Toast.makeText(context, "Not Valid Input from Client", Toast.LENGTH_LONG).show()
 
                 }
             }
         })
-
-        //Get the MqttAndroidClient to Connect to MQTT Broker
-        //val mqttClient = viewModel.getMqttAndroidClient()
-
-/*
-
-        //Set a Callback method to handle the received messages
-        mqttClient.setCallBack(object: MqttCallback {
-            override fun connectionLost(cause: Throwable?) {
-                Toast.makeText(context, "Connection Lost", Toast.LENGTH_LONG).show()
-            }
-
-            override fun messageArrived(topic: String?, message: MqttMessage?) {
-
-                if(message.toString().isDigitsOnly()) time.text = message.toString() else time.text=getString(R.string.loading)
-
-                try {
-                    progressBar.progress = (abs(60-message.toString().toInt()))
-                } catch (e1: NumberFormatException) {
-                    Toast.makeText(context, "Not Valid Input from Client", Toast.LENGTH_LONG).show()
-
-                }
-
-                viewModel.
-                getSpecificDevice().value?.let { it ->
-                    //Update the value of Device with current value and then Update it in DB
-                    it.time = message.toString()
-                    viewModel.update(it)
-                }
-
-                Log.d("MESSAGE 104", "MESSAGE RECEIVED")
-
-            }
-
-            override fun deliveryComplete(token: IMqttDeliveryToken?) {
-                TODO("Not yet implemented")
-            }
-        })
-        */
     }
-
 }

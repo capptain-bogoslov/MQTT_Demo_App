@@ -21,9 +21,6 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     private val allDevices: LiveData<List<Device>> = repository.allDevices.asLiveData()
     private val deviceId: MutableLiveData<Int> = MutableLiveData()
     val connected: MutableLiveData<Boolean> = MutableLiveData()
-    val messageArrived: MutableLiveData<String> = MutableLiveData()
-    val disconnected: MutableLiveData<Boolean> = MutableLiveData()
-    private val clientSubscribed: MutableLiveData<Boolean> = MutableLiveData(false)
     private val specificDevice: LiveData<Device> = Transformations.switchMap(deviceId) { device_id ->
         repository.getDevice(device_id).asLiveData()
     }
@@ -86,29 +83,14 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     @ExperimentalCoroutinesApi
     fun setCallbackToClient() {
         viewModelScope.launch(Dispatchers.IO) {
-            /*
-         //repository.saveMessageToDB(specificDevice.value!!.id)
-
-
-            repository.setCallbackToClient().collect { value ->
-                messageArrived.postValue(value)
-                repository.saveMessageToDB(messageArrived.value!!, specificDevice.value!!.id)
-
-            }
-            */
             repository.saveMessagesToDB(specificDevice.value!!.id)
-
         }
     }
 
     //get All Devices
     fun getAllDevices(): LiveData<List<Device>> {
-
         return allDevices
     }
-
-    //change value of connected
-
 
     //get a Specific Device
     fun getSpecificDevice(): LiveData<Device> {
@@ -137,8 +119,10 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
             deviceType = type,
             topicId = topic,
             subscribed = false,
+            time = "0",
+            status = "Offline",
             temperature = 0.0,
-            time = "0"
+            message = "Offline"
         )
     }
 
@@ -146,28 +130,6 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     fun setMqttAndroidClient(client: MqttClientClass) {
         mqttClient = client
 
-    }
-
-    //Function that will return the MqttAndroidClient
-    fun getMqttAndroidClient(): MqttClientClass {
-        return mqttClient
-    }
-
-    //Mark an Android Client as Subscribed
-    fun setSubscribed() {
-
-        clientSubscribed.postValue(true)
-    }
-
-    //Mark an Android Client as UnSubscribed
-    fun setUnsubscribed() {
-        clientSubscribed.postValue(false)
-    }
-
-    //Returns if a Client is Subscribed to a device
-    fun isClientSubscribed(): LiveData<Boolean> {
-        //if (!client.isConnected) clientSubscribed.postValue(false)
-        return clientSubscribed
     }
 
     //Disconnect from client if the VW is destroyed

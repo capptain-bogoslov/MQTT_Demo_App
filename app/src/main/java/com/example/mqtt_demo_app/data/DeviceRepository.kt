@@ -1,15 +1,19 @@
 package com.example.mqtt_demo_app.data
 
 import android.util.Log
-import android.widget.Toast
 import com.example.mqtt_demo_app.database.Device
 import com.example.mqtt_demo_app.database.DeviceDao
 import com.example.mqtt_demo_app.mqtt.MqttClientApi
 import com.example.mqtt_demo_app.mqtt.MqttClientClass
+import com.example.mqtt_demo_app.mqtt.MqttPayload
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import org.eclipse.paho.client.mqttv3.*
+import org.json.JSONObject
 import javax.inject.Inject
 import kotlin.coroutines.resume
 
@@ -24,6 +28,12 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
     //Holds an Instance of Mqtt client class
     private val mqttClient : MqttClientClass = MqttClientApi.getMqttClient()
     private val messageArrived: Boolean = false
+
+    private val moshi: Moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .build()
+    private val adapter: JsonAdapter<MqttPayload> = moshi.adapter(MqttPayload::class.java)
+
 
     //Insert Device to DB
     suspend fun insert(device: Device) {
@@ -102,19 +112,25 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
 
     //Set a Callback for mqttClient IOT receive Messages FLOW EDITION
     @ExperimentalCoroutinesApi
-    suspend fun setCallbackToClient(): Flow<String> = callbackFlow {
+    suspend fun setCallbackToClient(): Flow<JSONObject> = callbackFlow {
         val mqttClientCallback = object : MqttCallback {
             override fun messageArrived(topic: String?, message: MqttMessage?) {
-                trySend(message.toString())
+                //Create a json OBJ from the MqttMessage payload
+                val json = JSONObject(String(message!!.payload))
+
+                trySend(json)
             }
 
             //Notify when connection Lost
             override fun connectionLost(cause: Throwable?) {
-                trySend("-1")
+                //Create a json OBJ to return in case of connection Loss
+                val json = JSONObject()
+                json.put("time", "-1")
+                trySend(json)
             }
 
             override fun deliveryComplete(token: IMqttDeliveryToken?) {
-                trySend("DeliveryComplete")
+                //trySend("DeliveryComplete")
                 Log.d(this.javaClass.name, "Delivery complete")
             }
         }
@@ -150,27 +166,19 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
         mqttClient.setCallBack(mqttClientCallback)
     }*/
 
-    //Save Message to DB
-    suspend fun saveMessageToDB(message:String, deviceId: Int){
 
-
-        deviceDao.updateTime(message, deviceId)
-
-    }
 
     //Save Message to DB
     @ExperimentalCoroutinesApi
     suspend fun saveMessagesToDB(deviceId: Int){
-        var message = ""
         coroutineScope {
             setCallbackToClient().collect { value ->
-                message = value
-                deviceDao.updateTime(message, deviceId)
+
+                //Handle the JSON OBJ with Moshi and retrieve the values to save to DB
+                val payload = adapter.fromJson(value.toString())
+                deviceDao.updateTime(payload!!.time, deviceId)
             }
         }
-
-
-
 
     }
 

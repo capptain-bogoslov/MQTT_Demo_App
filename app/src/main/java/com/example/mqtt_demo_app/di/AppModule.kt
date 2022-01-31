@@ -1,7 +1,6 @@
 package com.example.mqtt_demo_app.di
 
 import android.app.Application
-import android.content.Context
 import com.example.mqtt_demo_app.database.DeviceDao
 import com.example.mqtt_demo_app.database.DeviceDatabase
 import dagger.Module

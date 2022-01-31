@@ -173,11 +173,10 @@ class AddDeviceFragment : Fragment() {
                 }
             }
 
-            val action =
-                AddDeviceFragmentDirections.actionAddDeviceFragmentToConnectToDeviceFragment(
-                    message = "Your device is successfully added to you List "
-                )
-            view.findNavController().navigate(action)
+
+            view.findNavController().navigate(AddDeviceFragmentDirections.actionAddDeviceFragmentToConnectToDeviceFragment(
+                message = "Your device is successfully added to you List "
+            ))
 
         }//end saveButtonListener
 

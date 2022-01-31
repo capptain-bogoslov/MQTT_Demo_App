@@ -23,15 +23,11 @@ import org.eclipse.paho.client.mqttv3.*
  */
 
 const val MQTT_SERVER_URI       = "tcp://broker.hivemq.com:1883"
-const val MQTT_USERNAME         = ""
-const val MQTT_PWD              = ""
-
 
 @ExperimentalCoroutinesApi
 @AndroidEntryPoint
 class ConnectToBrokerFragment : Fragment() {
 
-    private lateinit var message: String
     //Get nullable reference to FragmentUserBindingClass
     private var _binding: FragmentConnectToBrokerBinding? = null
     //Get the value but once assigned you can't assign it to something else
@@ -40,11 +36,6 @@ class ConnectToBrokerFragment : Fragment() {
     //Holds an Instance of Mqtt client class
     private lateinit var mqttClient : MqttClientClass
 
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
