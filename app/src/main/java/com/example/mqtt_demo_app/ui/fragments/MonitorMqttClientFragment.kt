@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.text.isDigitsOnly
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import com.example.mqtt_demo_app.R
 import com.example.mqtt_demo_app.ui.DeviceViewModel
 import com.example.mqtt_demo_app.databinding.FragmentMonitorMqttClientBinding
@@ -69,18 +70,26 @@ class   MonitorMqttClientFragment : Fragment() {
         val time = binding.timeTextView
         val progressBar = binding.progressBar
 
-        //time.text = viewModel.getSpecificDevice().value!!.time
 
         //Create the Callback to receive the Published messages from Device
         viewModel.setCallbackToClient()
-        //viewModel.setSpecificDevice(deviceId)
 
         //Observe the time value that is saved in DB
         viewModel.time.observe(viewLifecycleOwner, {value->
             if (value == "-1") {
+                //There is NO CONNECTION to Broker
+                Toast.makeText(context, "Connection Lost! Please connect again", Toast.LENGTH_LONG).show()
+                //Navigate to start Destination to connect again
+                findNavController().navigate(R.id.action_monitorMqttClientFragment_to_connectToBrokerFragment)
 
             } else {
                 time.text = value
+                try {
+                    progressBar.progress = (abs(60-value.toInt()))
+                } catch (e1: NumberFormatException) {
+                    Toast.makeText(context, "Not Valid Input from Client", Toast.LENGTH_LONG).show()
+
+                }
             }
         })
 

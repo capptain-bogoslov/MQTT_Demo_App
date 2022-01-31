@@ -12,6 +12,11 @@ import org.eclipse.paho.client.mqttv3.*
  * ----------------- developed by Theo Batsioulas 22/01/2022 for MQTT Demo App
  */
 
+/**
+ * MqttPayload.kt-------- Class to be used from Moshi Library to parse JSON OBJ in Kotlin OBJ
+ * ----------------- developed by Theo Batsioulas 30/01/2022 for MQTT Demo App
+ */
+
 class MqttClientClass(context: Context?,
                       serverURI: String,
                       clientID: String = "") {
