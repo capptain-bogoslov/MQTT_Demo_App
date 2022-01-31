@@ -29,8 +29,8 @@ class DeviceListAdapter(
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DeviceListAdapter.DeviceViewHolder {
-        val viewHolder = DeviceListAdapter.DeviceViewHolder(
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DeviceViewHolder {
+        val viewHolder = DeviceViewHolder(
             RecyclerItemViewBinding.inflate(
                 LayoutInflater.from(parent.context),
                 parent,
@@ -44,7 +44,7 @@ class DeviceListAdapter(
         return viewHolder
     }
 
-    override fun onBindViewHolder(holder: DeviceListAdapter.DeviceViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: DeviceViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
 
