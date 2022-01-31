@@ -23,6 +23,7 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
     val allDevices: Flow<List<Device>> = deviceDao.getAllDevices()
     //Holds an Instance of Mqtt client class
     private val mqttClient : MqttClientClass = MqttClientApi.getMqttClient()
+    private val messageArrived: Boolean = false
 
     //Insert Device to DB
     suspend fun insert(device: Device) {
@@ -99,13 +100,39 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
         awaitClose { channel.close() }
     }
 
+    //Set a Callback for mqttClient IOT receive Messages FLOW EDITION
+    @ExperimentalCoroutinesApi
+    suspend fun setCallbackToClient(): Flow<String> = callbackFlow {
+        val mqttClientCallback = object : MqttCallback {
+            override fun messageArrived(topic: String?, message: MqttMessage?) {
+                trySend(message.toString())
+            }
 
-    //Set a Callback for mqttClient IOT receive Messages
+            //Notify when connection Lost
+            override fun connectionLost(cause: Throwable?) {
+                trySend("-1")
+            }
+
+            override fun deliveryComplete(token: IMqttDeliveryToken?) {
+                trySend("DeliveryComplete")
+                Log.d(this.javaClass.name, "Delivery complete")
+            }
+        }
+
+        mqttClient.setCallBack(mqttClientCallback)
+
+        awaitClose { channel.close() }
+
+    }
+
+    /*//Set a Callback for mqttClient IOT receive Messages
     private suspend fun setCallbackToClient(): String = suspendCancellableCoroutine { continuation ->
         val mqttClientCallback = object : MqttCallback {
             override fun messageArrived(topic: String?, message: MqttMessage?) {
                 val msg = "MESSAGE 108: ${message.toString()} from topic: $topic"
+                deviceDao.updateTime(msg, 12)
                 continuation.resume(message.toString())
+                //deviceDao.updateTime(msg, 12)
 
             }
 
@@ -121,14 +148,30 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
         }
 
         mqttClient.setCallBack(mqttClientCallback)
+    }*/
+
+    //Save Message to DB
+    suspend fun saveMessageToDB(message:String, deviceId: Int){
+
+
+        deviceDao.updateTime(message, deviceId)
+
     }
 
     //Save Message to DB
-    suspend fun saveMessageToDB(deviceId: Int){
+    @ExperimentalCoroutinesApi
+    suspend fun saveMessagesToDB(deviceId: Int){
+        var message = ""
         coroutineScope {
-            val message = setCallbackToClient()
-            deviceDao.updateTime(message, deviceId)
+            setCallbackToClient().collect { value ->
+                message = value
+                deviceDao.updateTime(message, deviceId)
+            }
         }
+
+
+
+
     }
 
     //Function that subscribes a User to a topic IOT receive Publish Messages from another MQTT Client

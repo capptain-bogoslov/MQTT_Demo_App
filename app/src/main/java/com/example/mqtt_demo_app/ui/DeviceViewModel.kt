@@ -21,6 +21,7 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     private val allDevices: LiveData<List<Device>> = repository.allDevices.asLiveData()
     private val deviceId: MutableLiveData<Int> = MutableLiveData()
     val connected: MutableLiveData<Boolean> = MutableLiveData()
+    val messageArrived: MutableLiveData<String> = MutableLiveData()
     val disconnected: MutableLiveData<Boolean> = MutableLiveData()
     private val clientSubscribed: MutableLiveData<Boolean> = MutableLiveData(false)
     private val specificDevice: LiveData<Device> = Transformations.switchMap(deviceId) { device_id ->
@@ -82,9 +83,21 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     }
 
     //Set Callback to Listen to Published Messages and save them to DB
+    @ExperimentalCoroutinesApi
     fun setCallbackToClient() {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.saveMessageToDB(specificDevice.value!!.id)
+            /*
+         //repository.saveMessageToDB(specificDevice.value!!.id)
+
+
+            repository.setCallbackToClient().collect { value ->
+                messageArrived.postValue(value)
+                repository.saveMessageToDB(messageArrived.value!!, specificDevice.value!!.id)
+
+            }
+            */
+            repository.saveMessagesToDB(specificDevice.value!!.id)
+
         }
     }
 

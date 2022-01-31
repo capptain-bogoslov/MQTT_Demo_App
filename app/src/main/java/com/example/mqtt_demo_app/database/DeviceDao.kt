@@ -49,7 +49,7 @@ interface DeviceDao {
 
     //Save Message to DB
     @Query("UPDATE devices SET time= :time WHERE id= :deviceId")
-    suspend fun updateTime(time: String, deviceId: Int)
+    fun updateTime(time: String, deviceId: Int)
 
     //Get Time from DB
     @Query("SELECT time FROM devices WHERE id= :deviceId")

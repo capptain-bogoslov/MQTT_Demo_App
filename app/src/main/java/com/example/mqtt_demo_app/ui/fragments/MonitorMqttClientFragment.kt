@@ -73,6 +73,7 @@ class   MonitorMqttClientFragment : Fragment() {
 
         //Create the Callback to receive the Published messages from Device
         viewModel.setCallbackToClient()
+        //viewModel.setSpecificDevice(deviceId)
 
         //Observe the time value that is saved in DB
         viewModel.time.observe(viewLifecycleOwner, {value->

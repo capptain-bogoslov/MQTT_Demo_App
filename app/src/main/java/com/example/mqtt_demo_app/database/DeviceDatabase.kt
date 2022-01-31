@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import javax.inject.Singleton
 
 /**
  * DeviceDatabase.kt-------- App Database class that is the main point for connection with DB and provide access to a single instance of DB
@@ -16,6 +17,7 @@ abstract class DeviceDatabase: RoomDatabase() {
     abstract fun deviceDao(): DeviceDao
 
     //Singleton that prevents multiple instances of database opening at the same time
+    @Singleton
     companion object {
         @Volatile
         private var INSTANCE: DeviceDatabase? = null
