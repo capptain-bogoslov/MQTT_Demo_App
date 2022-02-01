@@ -210,7 +210,8 @@ class AddDeviceFragment : Fragment() {
                             deviceId = deviceId,
                             deviceName = deviceName,
                             deviceType = deviceType,
-                            deviceBrand = deviceBrand
+                            deviceBrand = deviceBrand,
+                            topicId = topicIdEditText.text.toString()
                         )
                     )
             } else {

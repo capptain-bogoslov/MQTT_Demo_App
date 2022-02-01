@@ -147,7 +147,6 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
                 Log.d(this.javaClass.name, "Delivery complete")
             }
         }
-
         mqttClient.setCallBack(mqttClientCallback)
 
         awaitClose { channel.close() }
@@ -156,13 +155,16 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
 
     //Save Message to DB
     @ExperimentalCoroutinesApi
-    suspend fun saveMessagesToDB(){
+    suspend fun saveMessagesToDB(topic: String){
         coroutineScope {
             setCallbackToClient().collect { value ->
-
                 //Handle the JSON OBJ with Moshi and retrieve the values to save to DB
                 val payload = adapter.fromJson(value.toString())
-                deviceDao.updatePayload(payload!!.time, payload.status, payload.temperature, payload.message, payload.topicId)
+                if (payload!!.message == "Connection Lost") {
+                    deviceDao.updateWhenConnectionLost(payload.status, payload.message, topic)
+                } else {
+                    deviceDao.updatePayload(payload!!.time, payload.status, payload.temperature, payload.message, payload.topicId)
+                }
             }
         }
 

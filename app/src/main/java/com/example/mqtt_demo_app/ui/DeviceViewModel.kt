@@ -62,17 +62,14 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
       viewModelScope.launch {
           repository.disconnectFromMqttBroker().collect { value ->
               connected.postValue(value)
-
           }
-          repository.resetValuesWhenUnsubscribed(specificDevice.value!!.id)
+          repository.resetValuesWhenDisconnected()
       }
     }
 
     //Subscribe to a Device with the specific topic
     fun subscribeToDevice(topic: String) {
-
         viewModelScope.launch(Dispatchers.IO) {
-            //repository.markAsSubscribed(specificDevice.value!!.id, true)
             val result = repository.subscribeToTopic(topic)
             repository.changeSubscribed(specificDevice.value!!.id, result)
         }
@@ -82,7 +79,6 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     @ExperimentalCoroutinesApi
     fun unsubscribeToDevice(topic: String) {
         viewModelScope.launch(Dispatchers.IO) {
-
             val result = repository.unsubscribeToTopic(topic)
             if (result) {
                 disconnectFromMqttBroker()
@@ -94,9 +90,9 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
 
     //Set Callback to Listen to Published Messages and save them to DB
     @ExperimentalCoroutinesApi
-    fun setCallbackToClient() {
+    fun setCallbackToClient(topicId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.saveMessagesToDB()
+            repository.saveMessagesToDB(topicId)
         }
     }
 
@@ -142,7 +138,6 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     //function that creates an MqttAndroidClient
     fun setMqttAndroidClient(client: MqttClientClass) {
         mqttClient = client
-
     }
 
     //Disconnect from client if the VW is destroyed
@@ -155,5 +150,4 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
         } catch (e1: UninitializedPropertyAccessException) {
         }
     }
-
 }

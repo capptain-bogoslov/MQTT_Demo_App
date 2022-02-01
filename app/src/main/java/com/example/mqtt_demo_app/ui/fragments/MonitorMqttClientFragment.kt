@@ -31,6 +31,7 @@ class   MonitorMqttClientFragment : Fragment() {
     private lateinit var deviceType: String
     private lateinit var deviceBrand: String
     private lateinit var deviceName: String
+    private lateinit var topicId: String
     private var deviceId: Int =0
     //Get the VM
     private val viewModel: DeviceViewModel by activityViewModels()
@@ -44,6 +45,7 @@ class   MonitorMqttClientFragment : Fragment() {
             deviceBrand = it.getString("deviceBrand").toString()
             deviceType = it.getString("deviceType").toString()
             deviceName = it.getString("deviceName").toString()
+            topicId =it.getString("topicId").toString()
         }
 
     }
@@ -70,7 +72,7 @@ class   MonitorMqttClientFragment : Fragment() {
         val message = binding.message
 
         //Create the Callback to receive the Published messages from Device
-        viewModel.setCallbackToClient()
+        viewModel.setCallbackToClient(topicId)
 
         //Observe Time value that is saved in DB
         viewModel.time.observe(viewLifecycleOwner, {value->
@@ -95,8 +97,12 @@ class   MonitorMqttClientFragment : Fragment() {
         viewModel.status.observe(viewLifecycleOwner, { value ->
             status.text = value
             //Change text color depending on input
-            if(value=="Running") status.setTextColor(ContextCompat.getColor(requireContext(), R.color.colorSecondary))
-            if (value=="Idle") status.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey))
+            when (value) {
+                "Running" -> status.setTextColor(ContextCompat.getColor(requireContext(), R.color.colorSecondary))
+                "Idle" -> status.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey))
+                "Offline" -> status.setTextColor(ContextCompat.getColor(requireContext(), R.color.red))
+            }
+
         })
         //Observe Message from DB
         viewModel.message.observe(viewLifecycleOwner, {value ->

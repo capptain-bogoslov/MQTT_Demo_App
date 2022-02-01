@@ -56,6 +56,10 @@ interface DeviceDao {
     @Query("UPDATE devices SET time= :time, status= :status, temperature= :temperature, message= :message WHERE topicId= :topicId")
     suspend fun updatePayload(time: String, status: String, temperature: String, message: String, topicId: String)
 
+    //Update DB in Connectivity Loss
+    @Query("UPDATE devices SET status= :status, message= :message WHERE topicId= :topicId")
+    suspend fun updateWhenConnectionLost(status: String, message: String, topicId: String)
+
     //Get Time from DB
     @Query("SELECT time FROM devices WHERE id= :deviceId")
     fun getTime(deviceId: Int): Flow<String>
