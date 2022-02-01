@@ -48,19 +48,20 @@ interface DeviceDao {
     fun unsubscribeAll(value: Boolean)
 
     //Save Message to DB
-    @Query("UPDATE devices SET time= :time WHERE id= :deviceId")
-    fun updateTime(time: String, deviceId: Int)
+    @Query("UPDATE devices SET time= :time, status= :status, temperature= :temperature, message= :message WHERE id= :deviceId")
+    fun updatePayload(time: String, status: String, temperature: String, message: String, deviceId: Int)
 
     //Get Time from DB
     @Query("SELECT time FROM devices WHERE id= :deviceId")
     fun getTime(deviceId: Int): Flow<String>
 
-  /*  //Get time for a specific device in DB
-    @Query("SELECT time FROM devices WHERE id = :deviceId")
-    fun getTime(deviceId: Int): Flow<Device>
+    //Get Time from DB
+    @Query("SELECT status FROM devices WHERE id= :deviceId")
+    fun getStatus(deviceId: Int): Flow<String>
 
-    //Get Temperature for a specific device
-    @Query("SELECT temperature FROM devices WHERE id= :deviceId")
-    fun getTemperature(deviceId: Int): Flow<Device>*/
+    //Get Time from DB
+    @Query("SELECT message FROM devices WHERE id= :deviceId")
+    fun getMessage(deviceId: Int): Flow<String>
+
 
 }

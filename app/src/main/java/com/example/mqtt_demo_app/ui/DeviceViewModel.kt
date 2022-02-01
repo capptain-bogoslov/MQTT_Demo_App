@@ -30,6 +30,12 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     val time: LiveData<String> = Transformations.switchMap(deviceId) { device_id ->
         repository.getTime(device_id).asLiveData()
     }
+    val status: LiveData<String> = Transformations.switchMap(deviceId) { device_id ->
+        repository.getStatus(device_id).asLiveData()
+    }
+    val message: LiveData<String> = Transformations.switchMap(deviceId) { device_id ->
+        repository.getMessage(device_id).asLiveData()
+    }
 
     //Holds an Instance of Mqtt client class
     private lateinit var client: MqttAndroidClient

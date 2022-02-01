@@ -14,7 +14,7 @@
         <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/layout/fragment_blank.xml" value="0.1" />
         <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/layout/fragment_connect_to_broker.xml" value="0.22" />
         <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/layout/fragment_connect_to_device.xml" value="0.16666666666666666" />
-        <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/layout/fragment_monitor_mqtt_client.xml" value="0.16666666666666666" />
+        <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/layout/fragment_monitor_mqtt_client.xml" value="0.1" />
         <entry key="..\:/Users/tbatsioulas/AndroidStudioProjects/MQTT_Demo_App/app/src/main/res/layout/recycler_item_view.xml" value="0.22" />
       </map>
     </option>

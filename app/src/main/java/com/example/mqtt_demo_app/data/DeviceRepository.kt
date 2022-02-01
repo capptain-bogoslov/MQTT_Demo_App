@@ -60,6 +60,17 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
         return deviceDao.getTime(id)
     }
 
+    //Get Time from db
+    fun getStatus(id: Int): Flow<String> {
+        return deviceDao.getStatus(id)
+    }
+
+    //Get Time from db
+    fun getMessage(id: Int): Flow<String> {
+        return deviceDao.getMessage(id)
+    }
+
+
     //Get if a User is SUBSCRIBED to a Device
     fun isSubscribed(id: Int): Flow<Boolean> {
         return deviceDao.getIfSubscribed(id)
@@ -176,7 +187,7 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
 
                 //Handle the JSON OBJ with Moshi and retrieve the values to save to DB
                 val payload = adapter.fromJson(value.toString())
-                deviceDao.updateTime(payload!!.time, deviceId)
+                deviceDao.updatePayload(payload!!.time, payload.status, payload.temperature, payload.message, deviceId)
             }
         }
 

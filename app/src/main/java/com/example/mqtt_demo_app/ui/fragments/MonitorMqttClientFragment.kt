@@ -6,7 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
+import com.example.mqtt_demo_app.R
 import com.example.mqtt_demo_app.ui.DeviceViewModel
 import com.example.mqtt_demo_app.databinding.FragmentMonitorMqttClientBinding
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -64,12 +66,14 @@ class   MonitorMqttClientFragment : Fragment() {
         binding.deviceTypeLabel.text = deviceType
         val time = binding.timeTextView
         val progressBar = binding.progressBar
+        val status = binding.status
+        val message = binding.message
 
 
         //Create the Callback to receive the Published messages from Device
         viewModel.setCallbackToClient()
 
-        //Observe the time value that is saved in DB
+        //Observe Time value that is saved in DB
         viewModel.time.observe(viewLifecycleOwner, {value->
             if (value == "-1") {
                 //There is NO CONNECTION to Broker
@@ -81,12 +85,24 @@ class   MonitorMqttClientFragment : Fragment() {
             } else {
                 time.text = value
                 try {
-                    progressBar.progress = (abs(60 -value.toInt()))
+                    progressBar.progress = (abs(50 -value.toInt()))
                 } catch (e1: NumberFormatException) {
                     Toast.makeText(context, "Not Valid Input from Client", Toast.LENGTH_LONG).show()
 
                 }
             }
         })
+        //Observe Status from DB
+        viewModel.status.observe(viewLifecycleOwner, { value ->
+            status.text = value
+            //Change text color depending on input
+            if(value=="Running") status.setTextColor(ContextCompat.getColor(requireContext(), R.color.colorSecondary))
+            if (value=="Idle") status.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey))
+        })
+        //Observe Message from DB
+        viewModel.message.observe(viewLifecycleOwner, {value ->
+            message.text = value
+        })
+
     }
 }
