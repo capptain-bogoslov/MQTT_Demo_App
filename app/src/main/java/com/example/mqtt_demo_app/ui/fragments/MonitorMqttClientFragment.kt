@@ -40,10 +40,10 @@ class   MonitorMqttClientFragment : Fragment() {
         super.onCreate(savedInstanceState)
         //Get arguments from previous Fragment
         arguments?.let {
+            deviceId = it.getInt("deviceId")
             deviceBrand = it.getString("deviceBrand").toString()
             deviceType = it.getString("deviceType").toString()
             deviceName = it.getString("deviceName").toString()
-            deviceId = it.getInt("deviceId")
         }
 
     }
@@ -68,7 +68,6 @@ class   MonitorMqttClientFragment : Fragment() {
         val progressBar = binding.progressBar
         val status = binding.status
         val message = binding.message
-
 
         //Create the Callback to receive the Published messages from Device
         viewModel.setCallbackToClient()

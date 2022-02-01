@@ -62,7 +62,9 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
       viewModelScope.launch {
           repository.disconnectFromMqttBroker().collect { value ->
               connected.postValue(value)
+
           }
+          repository.resetValuesWhenUnsubscribed(specificDevice.value!!.id)
       }
     }
 
@@ -77,11 +79,16 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     }
 
     //Unsubscribe to Device
+    @ExperimentalCoroutinesApi
     fun unsubscribeToDevice(topic: String) {
         viewModelScope.launch(Dispatchers.IO) {
 
             val result = repository.unsubscribeToTopic(topic)
-            repository.changeSubscribed(specificDevice.value!!.id, result)
+            if (result) {
+                disconnectFromMqttBroker()
+            } else {
+                repository.resetValuesWhenUnsubscribed(specificDevice.value!!.id)
+            }
         }
     }
 

@@ -19,6 +19,7 @@ import com.example.mqtt_demo_app.ui.DeviceViewModel
 import com.example.mqtt_demo_app.databinding.FragmentAddDeviceBinding
 import com.example.mqtt_demo_app.mqtt.MqttClientApi
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 
 
@@ -28,6 +29,7 @@ import kotlinx.coroutines.launch
  */
 
 
+@ExperimentalCoroutinesApi
 @AndroidEntryPoint
 class AddDeviceFragment : Fragment() {
 
@@ -223,9 +225,7 @@ class AddDeviceFragment : Fragment() {
 
         //Listener for UNSUBSCRIBE Button that unsubscribes Android Client from the Topic in MQTT Broker
         unsubscribeButton.setOnClickListener {
-
             viewModel.unsubscribeToDevice(topicIdEditText.text.toString())
-
         }//end Unsubscribe
     }
 

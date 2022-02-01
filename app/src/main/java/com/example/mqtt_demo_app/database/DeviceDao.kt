@@ -45,11 +45,16 @@ interface DeviceDao {
 
     //Unsubscribe from All Devices
     @Query("UPDATE devices SET subscribed= :value")
-    fun unsubscribeAll(value: Boolean)
+    suspend fun unsubscribeAll(value: Boolean)
+
+    //Set all Devices as Offline
+    //Unsubscribe from All Devices
+    @Query("UPDATE devices SET status= :value")
+    suspend fun setStatusToAll(value: String)
 
     //Save Message to DB
     @Query("UPDATE devices SET time= :time, status= :status, temperature= :temperature, message= :message WHERE id= :deviceId")
-    fun updatePayload(time: String, status: String, temperature: String, message: String, deviceId: Int)
+    suspend fun updatePayload(time: String, status: String, temperature: String, message: String, deviceId: Int)
 
     //Get Time from DB
     @Query("SELECT time FROM devices WHERE id= :deviceId")

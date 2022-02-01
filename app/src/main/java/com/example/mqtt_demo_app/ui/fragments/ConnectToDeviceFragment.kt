@@ -22,6 +22,10 @@ import com.example.mqtt_demo_app.databinding.FragmentConnectToDeviceBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import androidx.recyclerview.widget.DividerItemDecoration
+
+
+
 
 
 /**
@@ -87,6 +91,14 @@ class ConnectToDeviceFragment : Fragment() {
         //RecyclerView reference
         val recyclerView = binding.recyclerView
         recyclerView.layoutManager = LinearLayoutManager(context)
+        //Add a divider between item Recycler View Items
+        recyclerView.addItemDecoration(
+            DividerItemDecoration(
+                recyclerView.context,
+                DividerItemDecoration.VERTICAL
+            )
+        )
+
 
         //Navigate to Add || Edit Device and pass the necessary arguments
         val deviceAdapter = DeviceListAdapter {

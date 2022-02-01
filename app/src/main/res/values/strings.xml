@@ -23,6 +23,7 @@
     <string name="status">STATUS :</string>
     <string name="input">INPUT :</string>
     <string name="offline">Offline</string>
+    <string name="idle">Idle</string>
 
     <string-array name="deviceTypes">
         <item>Microwave</item>

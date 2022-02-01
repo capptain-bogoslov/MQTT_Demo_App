@@ -2,9 +2,12 @@ package com.example.mqtt_demo_app.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mqtt_demo_app.R
 import com.example.mqtt_demo_app.database.Device
 import com.example.mqtt_demo_app.databinding.RecyclerItemViewBinding
 
@@ -55,6 +58,30 @@ class DeviceListAdapter(
             binding.deviceName.text = device.deviceName
             binding.deviceBrand.text = device.deviceBrand
             binding.deviceType.text = device.deviceType
+            binding.deviceStatus.text = device.status
+
+
+            //Change Layout depending on Status Value
+            val drawable1 = ContextCompat.getDrawable(binding.deviceStatus.context, R.drawable.lamp_bright_24)
+            val drawable2 = ContextCompat.getDrawable(binding.deviceStatus.context, R.drawable.lamp_grey_24)
+            when (binding.deviceStatus.text) {
+                "Running" -> {
+                    binding.deviceStatus.setTextColor(ContextCompat.getColor(binding.deviceStatus.context, R.color.colorSecondary))
+                    binding.deviceStatus.setCompoundDrawablesWithIntrinsicBounds(drawable1, null, null, null)
+                }
+                "Offline" -> {
+                    binding.deviceStatus.setTextColor(ContextCompat.getColor(binding.deviceStatus.context, R.color.red))
+                    binding.deviceStatus.setCompoundDrawablesWithIntrinsicBounds(drawable2, null, null, null)
+                }
+                "Idle" -> {
+                    binding.deviceStatus.setTextColor(ContextCompat.getColor(binding.deviceStatus.context, R.color.grey))
+                    binding.deviceStatus.setCompoundDrawablesWithIntrinsicBounds(drawable2, null, null, null)
+
+                }
+
+
+            }
+            binding.deviceMessage.text = device.message
         }
     }
 
