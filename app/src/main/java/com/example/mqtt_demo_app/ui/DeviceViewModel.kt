@@ -96,7 +96,7 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     @ExperimentalCoroutinesApi
     fun setCallbackToClient() {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.saveMessagesToDB(specificDevice.value!!.id)
+            repository.saveMessagesToDB()
         }
     }
 

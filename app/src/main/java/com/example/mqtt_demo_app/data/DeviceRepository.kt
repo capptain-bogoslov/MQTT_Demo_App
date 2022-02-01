@@ -128,7 +128,7 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
             override fun messageArrived(topic: String?, message: MqttMessage?) {
                 //Create a json OBJ from the MqttMessage payload
                 val json = JSONObject(String(message!!.payload))
-
+                json.put("topicId", topic)
                 trySend(json)
             }
 
@@ -156,13 +156,13 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
 
     //Save Message to DB
     @ExperimentalCoroutinesApi
-    suspend fun saveMessagesToDB(deviceId: Int){
+    suspend fun saveMessagesToDB(){
         coroutineScope {
             setCallbackToClient().collect { value ->
 
                 //Handle the JSON OBJ with Moshi and retrieve the values to save to DB
                 val payload = adapter.fromJson(value.toString())
-                deviceDao.updatePayload(payload!!.time, payload.status, payload.temperature, payload.message, deviceId)
+                deviceDao.updatePayload(payload!!.time, payload.status, payload.temperature, payload.message, payload.topicId)
             }
         }
 
@@ -183,7 +183,6 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
                     continuation.resume(false)
                 }
             })
-
     }
 
     //Function that UNSUBSCRIBES  User from Device Topic
@@ -212,7 +211,7 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
     //Reset values in DB when User is UNSUBSCRIBED from a Device
     suspend fun resetValuesWhenUnsubscribed(deviceId: Int) {
         deviceDao.changeSubscribed(deviceId, false)
-        deviceDao.updatePayload("-1", "Offline", "15", "Offline", deviceId)
+        deviceDao.updatePayload("-1", "Offline", "15", "Offline", "0")
     }
 
 }
