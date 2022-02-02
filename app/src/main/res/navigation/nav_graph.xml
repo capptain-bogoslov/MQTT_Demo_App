@@ -93,8 +93,12 @@
         <argument
             android:name="deviceId"
             app:argType="integer" />
+        <argument
+            android:name="topicId"
+            app:argType="string" />
         <action
             android:id="@+id/action_monitorMqttClientFragment_to_connectToBrokerFragment"
             app:destination="@id/connectToBrokerFragment" />
+
     </fragment>
 </navigation>

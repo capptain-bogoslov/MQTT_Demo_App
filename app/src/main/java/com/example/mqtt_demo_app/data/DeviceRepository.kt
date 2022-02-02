@@ -25,15 +25,11 @@ import kotlin.coroutines.resume
 class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
 
     val allDevices: Flow<List<Device>> = deviceDao.getAllDevices()
-    //Holds an Instance of Mqtt client class
-    private val mqttClient : MqttClientClass = MqttClientApi.getMqttClient()
-    private val messageArrived: Boolean = false
 
     private val moshi: Moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
         .build()
     private val adapter: JsonAdapter<MqttPayload> = moshi.adapter(MqttPayload::class.java)
-
 
     //Insert Device to DB
     suspend fun insert(device: Device) {
@@ -60,6 +56,21 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
         return deviceDao.getTime(id)
     }
 
+    //Get Time from db
+    fun getStatus(id: Int): Flow<String> {
+        return deviceDao.getStatus(id)
+    }
+
+    //Get Time from db
+    fun getMessage(id: Int): Flow<String> {
+        return deviceDao.getMessage(id)
+    }
+
+    //Get Connection Status
+    fun getConnection(): Flow<Boolean> {
+        return deviceDao.getConnection()
+    }
+
     //Get if a User is SUBSCRIBED to a Device
     fun isSubscribed(id: Int): Flow<Boolean> {
         return deviceDao.getIfSubscribed(id)
@@ -70,44 +81,35 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
         deviceDao.changeSubscribed(deviceId, subscribed)
     }
 
-
-    //Return a Flow with the result of the connection with MQTT Broker
-    @ExperimentalCoroutinesApi
-    fun connectToMqttBroker(username: String?, password: String?): Flow<Boolean> = callbackFlow {
+    //Create suspendCancellableCoroutine that returns the Boolean value of the connection result
+    suspend fun connectToMqttBroker(username: String?, password: String?): Boolean = suspendCancellableCoroutine { continuation ->
         //Set the Listener
         val mqttActionListener = object: IMqttActionListener {
             override fun onSuccess(asyncActionToken: IMqttToken?) {
-                trySend(true)
+                continuation.resume(true)
             }
 
             override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
-                trySend(false)
+                continuation.resume(false)
             }
         }
-
         //Connect and attach the Listener
-        mqttClient.connect(username?:"", password?:"", mqttActionListener)
-
-        awaitClose{ channel.close() }
+        MqttClientApi.getMqttClient().connect(username?:"", password?:"", mqttActionListener)
     }
 
-    //Return a Flow with the result of disconnect from MQTT Broker
-    @ExperimentalCoroutinesApi
-    fun disconnectFromMqttBroker(): Flow<Boolean> = callbackFlow {
+    //Create suspendCancellableCoroutine that returns the Boolean value of the disconnection result
+    suspend fun disconnectFromMqttBroker(): Boolean = suspendCancellableCoroutine { continuation ->
         //Set the Listener
         val mqttActionListener = object: IMqttActionListener {
             override fun onSuccess(asyncActionToken: IMqttToken?) {
-                trySend(false)
+                continuation.resume(false)
             }
 
             override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
-                trySend(false)
+                continuation.resume(false)
             }
         }
-
-        mqttClient.disconnect(mqttActionListener)
-
-        awaitClose { channel.close() }
+        MqttClientApi.getMqttClient().disconnect(mqttActionListener)
     }
 
     //Set a Callback for mqttClient IOT receive Messages FLOW EDITION
@@ -117,7 +119,7 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
             override fun messageArrived(topic: String?, message: MqttMessage?) {
                 //Create a json OBJ from the MqttMessage payload
                 val json = JSONObject(String(message!!.payload))
-
+                json.put("topicId", topic)
                 trySend(json)
             }
 
@@ -126,142 +128,85 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
                 //Create a json OBJ to return in case of connection Loss
                 val json = JSONObject()
                 json.put("time", "-1")
+                json.put("status", "Offline")
+                json.put("message", "Connection Lost")
                 trySend(json)
             }
 
             override fun deliveryComplete(token: IMqttDeliveryToken?) {
-                //trySend("DeliveryComplete")
                 Log.d(this.javaClass.name, "Delivery complete")
             }
         }
-
-        mqttClient.setCallBack(mqttClientCallback)
+        MqttClientApi.getMqttClient().setCallBack(mqttClientCallback)
 
         awaitClose { channel.close() }
-
     }
-
-    /*//Set a Callback for mqttClient IOT receive Messages
-    private suspend fun setCallbackToClient(): String = suspendCancellableCoroutine { continuation ->
-        val mqttClientCallback = object : MqttCallback {
-            override fun messageArrived(topic: String?, message: MqttMessage?) {
-                val msg = "MESSAGE 108: ${message.toString()} from topic: $topic"
-                deviceDao.updateTime(msg, 12)
-                continuation.resume(message.toString())
-                //deviceDao.updateTime(msg, 12)
-
-            }
-
-            //Notify when connection Lost
-            override fun connectionLost(cause: Throwable?) {
-                continuation.resume("ConnectionLost")
-            }
-
-            override fun deliveryComplete(token: IMqttDeliveryToken?) {
-                continuation.resume("DeliveryComplete")
-                Log.d(this.javaClass.name, "Delivery complete")
-            }
-        }
-
-        mqttClient.setCallBack(mqttClientCallback)
-    }*/
-
-
 
     //Save Message to DB
     @ExperimentalCoroutinesApi
-    suspend fun saveMessagesToDB(deviceId: Int){
+    suspend fun saveMessagesToDB(){
         coroutineScope {
             setCallbackToClient().collect { value ->
-
                 //Handle the JSON OBJ with Moshi and retrieve the values to save to DB
                 val payload = adapter.fromJson(value.toString())
-                deviceDao.updateTime(payload!!.time, deviceId)
+                if (payload!!.message == "Connection Lost") {
+                    deviceDao.updateWhenConnectionLost(payload.status, payload.message)
+                    changeConnectionStatus(false)
+                    resetValuesWhenDisconnected()
+                } else {
+                    deviceDao.updatePayload(payload!!.time, payload.status, payload.temperature, payload.message, payload.topicId)
+                }
             }
         }
+    }
 
+    //Function that returns a Boolean value to Repository for when the connection is Lost
+    suspend fun changeConnectionStatus(connected: Boolean){
+        deviceDao.changeConnectionStatus(connected)
     }
 
     //Function that subscribes a User to a topic IOT receive Publish Messages from another MQTT Client
     suspend fun subscribeToTopic(topic: String): Boolean = suspendCancellableCoroutine { continuation ->
 
         //Subscribe to topic
-        mqttClient.subscribe(topic,
+        MqttClientApi.getMqttClient().subscribe(topic,
             1,
             object : IMqttActionListener {
                 override fun onSuccess(asyncActionToken: IMqttToken?) {
                     continuation.resume(true)
                 }
-
                 override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
                     continuation.resume(false)
                 }
             })
-
     }
 
     //Function that UNSUBSCRIBES  User from Device Topic
     suspend fun unsubscribeToTopic(topic: String): Boolean = suspendCancellableCoroutine { continuation ->
 
         //Unsubscribe from topic
-        mqttClient.unsubscribe( topic,
+        MqttClientApi.getMqttClient().unsubscribe( topic,
             object : IMqttActionListener {
                 override fun onSuccess(asyncActionToken: IMqttToken?) {
                     continuation.resume(false)
                 }
-
                 override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
-                    continuation.resume(false)
+                    continuation.resume(true)
                 }
             })
-
-
-    }
-/*   suspend fun unsubscribeToTopic(topic: String, deviceId: Int) {
-
-        var isSubscribed = false
-
-        coroutineScope {
-
-            async {
-
-                mqttClient.unsubscribe( topic,
-                    object : IMqttActionListener {
-                        override fun onSuccess(asyncActionToken: IMqttToken?) {
-                            isSubscribed = false
-                        }
-
-                        override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
-                            isSubscribed = false
-                        }
-                    })
-                changeSubscribed(deviceId, isSubscribed)
-
-            }.await()
-
-        }
-
-    }*/
-
-
-    //Save values to DB
-
-   /* //Get if a User is Subscribed to Device
-    fun getSubscribed(id: Int) : Flow<Boolean> {
-        return deviceDao.getSubscribed(id)
-    }*/
-
- /*   //Get time for a specific device
-    fun getTime(id: Int): Flow<Device> {
-        return deviceDao.getTime(id)
     }
 
-    //Get Temperature for a specific device
-    fun getTemperature(id: Int): Flow<Device> {
-        return deviceDao.getTemperature(id)
-    }*/
+    //Reset values in DB when there is no connection
+    suspend fun resetValuesWhenDisconnected() {
+        //Set Devices in DB as unsubscribed
+        deviceDao.unsubscribeAll(false)
+        deviceDao.setStatusToAll("Offline")
+    }
 
-
-
+    //Reset values in DB when User is UNSUBSCRIBED from a Device
+    suspend fun resetValuesWhenUnsubscribed(deviceId: Int) {
+        deviceDao.changeSubscribed(deviceId, false)
+        deviceDao.updateWhenConnectionLost("Offline", "Unsubscribed")
+    }
 
 }

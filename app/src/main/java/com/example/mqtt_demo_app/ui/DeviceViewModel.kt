@@ -3,11 +3,8 @@ package com.example.mqtt_demo_app.ui
 import androidx.lifecycle.*
 import com.example.mqtt_demo_app.data.DeviceRepository
 import com.example.mqtt_demo_app.database.Device
-import com.example.mqtt_demo_app.mqtt.MqttClientClass
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
-import org.eclipse.paho.android.service.MqttAndroidClient
 import javax.inject.Inject
 
 /**
@@ -18,9 +15,11 @@ import javax.inject.Inject
 @HiltViewModel
 class DeviceViewModel @Inject constructor(private val repository: DeviceRepository): ViewModel() {
 
+    //Holds an Instance of Mqtt client class
     private val allDevices: LiveData<List<Device>> = repository.allDevices.asLiveData()
     private val deviceId: MutableLiveData<Int> = MutableLiveData()
-    val connected: MutableLiveData<Boolean> = MutableLiveData()
+    val connected: LiveData<Boolean> = repository.getConnection().asLiveData()
+    val brokerActive: MutableLiveData<Boolean> = MutableLiveData()
     private val specificDevice: LiveData<Device> = Transformations.switchMap(deviceId) { device_id ->
         repository.getDevice(device_id).asLiveData()
     }
@@ -30,10 +29,12 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     val time: LiveData<String> = Transformations.switchMap(deviceId) { device_id ->
         repository.getTime(device_id).asLiveData()
     }
-
-    //Holds an Instance of Mqtt client class
-    private lateinit var client: MqttAndroidClient
-    private lateinit var mqttClient: MqttClientClass
+    val status: LiveData<String> = Transformations.switchMap(deviceId) { device_id ->
+        repository.getStatus(device_id).asLiveData()
+    }
+    val message: LiveData<String> = Transformations.switchMap(deviceId) { device_id ->
+        repository.getMessage(device_id).asLiveData()
+    }
 
     //Coroutines to handle data in a non-blocking way
     fun insert(device: Device) = viewModelScope.launch { repository.insert(device) }
@@ -41,41 +42,44 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     fun delete(device: Device) = viewModelScope.launch { repository.delete(device) }
 
     //Connect to MQTT Broker and update "connected" value
-    @ExperimentalCoroutinesApi
     fun connectToMqttBroker(user_name: String, pass_word: String) {
         viewModelScope.launch {
-            repository.connectToMqttBroker(user_name, pass_word).collect { value ->
-                connected.postValue(value)
-            }
+            val result = repository.connectToMqttBroker(user_name, pass_word)
+            brokerActive.postValue(result)
+            repository.changeConnectionStatus(result)
+            //Reset old values because it is a New Connection with Broker
+            repository.resetValuesWhenDisconnected()
         }
     }
 
     //Connect to MQTT Broker and update "connected" value
-    @ExperimentalCoroutinesApi
     fun disconnectFromMqttBroker() {
       viewModelScope.launch {
-          repository.disconnectFromMqttBroker().collect { value ->
-              connected.postValue(value)
-          }
+          val result = repository.disconnectFromMqttBroker()
+          brokerActive.postValue(result)
+          repository.changeConnectionStatus(result)
+          repository.resetValuesWhenDisconnected()
       }
     }
 
     //Subscribe to a Device with the specific topic
     fun subscribeToDevice(topic: String) {
-
         viewModelScope.launch(Dispatchers.IO) {
-            //repository.markAsSubscribed(specificDevice.value!!.id, true)
             val result = repository.subscribeToTopic(topic)
             repository.changeSubscribed(specificDevice.value!!.id, result)
         }
     }
 
     //Unsubscribe to Device
+    @ExperimentalCoroutinesApi
     fun unsubscribeToDevice(topic: String) {
         viewModelScope.launch(Dispatchers.IO) {
-
             val result = repository.unsubscribeToTopic(topic)
-            repository.changeSubscribed(specificDevice.value!!.id, result)
+            if (result) {
+                disconnectFromMqttBroker()
+            } else {
+                repository.resetValuesWhenUnsubscribed(specificDevice.value!!.id)
+            }
         }
     }
 
@@ -83,7 +87,7 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     @ExperimentalCoroutinesApi
     fun setCallbackToClient() {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.saveMessagesToDB(specificDevice.value!!.id)
+            repository.saveMessagesToDB()
         }
     }
 
@@ -100,6 +104,11 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     //set the value of a specific device
     fun setSpecificDevice(id: Int) {
         deviceId.value = id
+    }
+
+    //Change the value of BrokerActive in case something changed
+    fun changeBrokerStatus(value: Boolean) {
+        brokerActive.postValue(value)
     }
 
     //Updating values of existing Devices
@@ -119,28 +128,11 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
             deviceType = type,
             topicId = topic,
             subscribed = false,
+            connected = false,
             time = "0",
             status = "Offline",
             temperature = 0.0,
             message = "Offline"
         )
     }
-
-    //function that creates an MqttAndroidClient
-    fun setMqttAndroidClient(client: MqttClientClass) {
-        mqttClient = client
-
-    }
-
-    //Disconnect from client if the VW is destroyed
-    override fun onCleared() {
-        super.onCleared()
-        try {
-            if (client.isConnected) {
-                client.disconnect()
-            }
-        } catch (e1: UninitializedPropertyAccessException) {
-        }
-    }
-
 }

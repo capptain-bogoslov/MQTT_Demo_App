@@ -18,6 +18,7 @@ data class Device(
     @ColumnInfo(name = "deviceType") var deviceType: String,
     @ColumnInfo(name = "topicId") var topicId: String,
     @ColumnInfo(name = "subscribed") var subscribed: Boolean,
+    @ColumnInfo(name = "connected") var connected: Boolean,
     @ColumnInfo(name = "time") var time: String,
     @ColumnInfo(name = "status") var status: String,
     @ColumnInfo(name = "temperature") var temperature: Double,

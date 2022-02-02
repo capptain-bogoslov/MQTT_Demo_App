@@ -6,7 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
+import com.example.mqtt_demo_app.R
 import com.example.mqtt_demo_app.ui.DeviceViewModel
 import com.example.mqtt_demo_app.databinding.FragmentMonitorMqttClientBinding
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,21 +31,21 @@ class   MonitorMqttClientFragment : Fragment() {
     private lateinit var deviceType: String
     private lateinit var deviceBrand: String
     private lateinit var deviceName: String
+    private lateinit var topicId: String
     private var deviceId: Int =0
     //Get the VM
     private val viewModel: DeviceViewModel by activityViewModels()
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //Get arguments from previous Fragment
         arguments?.let {
+            deviceId = it.getInt("deviceId")
             deviceBrand = it.getString("deviceBrand").toString()
             deviceType = it.getString("deviceType").toString()
             deviceName = it.getString("deviceName").toString()
-            deviceId = it.getInt("deviceId")
+            topicId =it.getString("topicId").toString()
         }
-
     }
 
     override fun onCreateView(
@@ -55,7 +57,6 @@ class   MonitorMqttClientFragment : Fragment() {
         return binding.root
     }
 
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -64,12 +65,10 @@ class   MonitorMqttClientFragment : Fragment() {
         binding.deviceTypeLabel.text = deviceType
         val time = binding.timeTextView
         val progressBar = binding.progressBar
+        val status = binding.status
+        val message = binding.message
 
-
-        //Create the Callback to receive the Published messages from Device
-        viewModel.setCallbackToClient()
-
-        //Observe the time value that is saved in DB
+        //Observe Time value that is saved in DB
         viewModel.time.observe(viewLifecycleOwner, {value->
             if (value == "-1") {
                 //There is NO CONNECTION to Broker
@@ -77,16 +76,31 @@ class   MonitorMqttClientFragment : Fragment() {
                 //Navigate to start Destination to connect again
                 //findNavController().navigate(R.id.action_monitorMqttClientFragment_to_connectToBrokerFragment)
                 time.text = "-"
-
             } else {
                 time.text = value
                 try {
-                    progressBar.progress = (abs(60 -value.toInt()))
+                    progressBar.progress = (abs(50 -value.toInt()))
                 } catch (e1: NumberFormatException) {
                     Toast.makeText(context, "Not Valid Input from Client", Toast.LENGTH_LONG).show()
-
                 }
             }
+        })
+        //Observe Status from DB
+        viewModel.status.observe(viewLifecycleOwner, { value ->
+            status.text = value
+            //Change text color depending on input
+            when (value) {
+                "Running" -> status.setTextColor(ContextCompat.getColor(requireContext(), R.color.colorSecondary))
+                "Idle" -> status.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey))
+                "Offline" -> status.setTextColor(ContextCompat.getColor(requireContext(), R.color.red))
+            }
+
+        })
+        //Observe Message from DB
+        viewModel.message.observe(viewLifecycleOwner, {value ->
+                //There is NO CONNECTION to Broker
+            if (value == "ConnectionLost") Toast.makeText(context, "Connection Lost! Please connect again", Toast.LENGTH_LONG).show()
+            else message.text = value
         })
     }
 }

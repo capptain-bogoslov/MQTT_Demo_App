@@ -13,15 +13,14 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.coroutineScope
 import androidx.navigation.findNavController
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.mqtt_demo_app.R
 import com.example.mqtt_demo_app.adapters.DeviceListAdapter
 import com.example.mqtt_demo_app.ui.DeviceViewModel
 import com.example.mqtt_demo_app.databinding.FragmentConnectToDeviceBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import androidx.recyclerview.widget.DividerItemDecoration
 
 
 /**
@@ -41,7 +40,6 @@ class ConnectToDeviceFragment : Fragment() {
     //VM
     private val viewModel: DeviceViewModel by activityViewModels()
 
-
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,9 +56,12 @@ class ConnectToDeviceFragment : Fragment() {
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                viewModel.disconnectFromMqttBroker()
+                Toast.makeText(context, "You are now disconnected from MQTT Broker", Toast.LENGTH_LONG).show()
             }
         })
 
+        //Create the Callback to receive the Published messages from Device
+        viewModel.setCallbackToClient()
     }
 
     override fun onCreateView(
@@ -76,17 +77,21 @@ class ConnectToDeviceFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        //Observe if User is disconnected properly
-        viewModel.connected.observe(viewLifecycleOwner, {value ->
-            if (value == false) {
-                    findNavController()
-                        .navigate(R.id.action_connectToDeviceFragment_to_connectToBrokerFragment)
-                }
-            })
+        //Observe if MQTT Broker is active to navigate to previous Fragment
+        viewModel.brokerActive.observe(viewLifecycleOwner, {value ->
+            if (!value) Toast.makeText(context, "You are now disconnected from MQTT Broker", Toast.LENGTH_LONG).show()
+        })
 
         //RecyclerView reference
         val recyclerView = binding.recyclerView
         recyclerView.layoutManager = LinearLayoutManager(context)
+        //Add a divider between item Recycler View Items
+        recyclerView.addItemDecoration(
+            DividerItemDecoration(
+                recyclerView.context,
+                DividerItemDecoration.VERTICAL
+            )
+        )
 
         //Navigate to Add || Edit Device and pass the necessary arguments
         val deviceAdapter = DeviceListAdapter {

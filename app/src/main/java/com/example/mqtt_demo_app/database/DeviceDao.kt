@@ -35,6 +35,10 @@ interface DeviceDao {
     @Query("SELECT * FROM devices WHERE id= :deviceId")
     fun getDevice(deviceId: Int): Flow<Device>
 
+    //get Connection Status of Devices
+    @Query("SELECT connected FROM devices GROUP BY connected")
+    fun getConnection(): Flow<Boolean>
+
     //Get if a User is SUBSCRIBED to a DEVICE
     @Query("SELECT subscribed FROM devices WHERE id= :deviceId")
     fun getIfSubscribed(deviceId: Int): Flow<Boolean>
@@ -45,22 +49,34 @@ interface DeviceDao {
 
     //Unsubscribe from All Devices
     @Query("UPDATE devices SET subscribed= :value")
-    fun unsubscribeAll(value: Boolean)
+    suspend fun unsubscribeAll(value: Boolean)
+
+    //Set all Devices as Offline
+    //Unsubscribe from All Devices
+    @Query("UPDATE devices SET status= :value")
+    suspend fun setStatusToAll(value: String)
 
     //Save Message to DB
-    @Query("UPDATE devices SET time= :time WHERE id= :deviceId")
-    fun updateTime(time: String, deviceId: Int)
+    @Query("UPDATE devices SET time= :time, status= :status, temperature= :temperature, message= :message WHERE topicId= :topicId")
+    suspend fun updatePayload(time: String, status: String, temperature: String, message: String, topicId: String)
+
+    //Update DB in Connectivity Loss
+    @Query("UPDATE devices SET status= :status, message= :message")
+    suspend fun updateWhenConnectionLost(status: String, message: String)
+
+    //Update Connection Status in DB
+    @Query("UPDATE devices SET connected= :value")
+    suspend fun changeConnectionStatus(value: Boolean)
 
     //Get Time from DB
     @Query("SELECT time FROM devices WHERE id= :deviceId")
     fun getTime(deviceId: Int): Flow<String>
 
-  /*  //Get time for a specific device in DB
-    @Query("SELECT time FROM devices WHERE id = :deviceId")
-    fun getTime(deviceId: Int): Flow<Device>
+    //Get Time from DB
+    @Query("SELECT status FROM devices WHERE id= :deviceId")
+    fun getStatus(deviceId: Int): Flow<String>
 
-    //Get Temperature for a specific device
-    @Query("SELECT temperature FROM devices WHERE id= :deviceId")
-    fun getTemperature(deviceId: Int): Flow<Device>*/
-
+    //Get Time from DB
+    @Query("SELECT message FROM devices WHERE id= :deviceId")
+    fun getMessage(deviceId: Int): Flow<String>
 }

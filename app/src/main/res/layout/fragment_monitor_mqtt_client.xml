@@ -33,17 +33,69 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
+        android:id="@+id/status_label"
+        style="@style/text_style1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/status"
+        android:textSize="25sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/device_type_label" />
+
+    <TextView
+        android:id="@+id/status"
+        style="@style/text_style1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:text="@string/offline"
+        android:textColor="@color/grey"
+        android:textSize="25sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/status_label"
+        app:layout_constraintTop_toBottomOf="@id/device_brand_label" />
+
+    <TextView
+        android:id="@+id/message_label"
+        style="@style/text_style1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/input"
+        android:textSize="25sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/status_label" />
+
+    <TextView
+        android:id="@+id/message"
+        style="@style/text_style1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:textSize="25sp"
+        android:textColor="@color/purple_700"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/message_label"
+        app:layout_constraintTop_toBottomOf="@id/status" />
+
+
+    <TextView
         android:id="@+id/oven_timer"
         style="@style/text_style1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:text="@string/oven_timer"
         android:textSize="25sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/device_type_label" />
+        app:layout_constraintTop_toBottomOf="@+id/message_label" />
 
     <ProgressBar
         android:id="@+id/progressBar"
@@ -52,12 +104,12 @@
         android:layout_height="400dp"
         android:background="@drawable/circle_shape"
         android:indeterminate="false"
-        android:max="60"
+        android:max="50"
         android:progressDrawable="@drawable/round_progress_bar"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/oven_timer" />
+        app:layout_constraintTop_toBottomOf="@+id/oven_timer" />
 
     <TextView
         android:id="@+id/timeTextView"

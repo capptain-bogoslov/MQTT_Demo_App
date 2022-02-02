@@ -20,6 +20,10 @@
     <string name="oven_timer">OVEN TIMER:</string>
     <string name="seconds">sec</string>
     <string name="loading">Loading</string>
+    <string name="status">STATUS :</string>
+    <string name="input">INPUT :</string>
+    <string name="offline">Offline</string>
+    <string name="idle">Idle</string>
 
     <string-array name="deviceTypes">
         <item>Microwave</item>

@@ -12,5 +12,6 @@ data class MqttPayload(
     val time: String = "-",
     val status: String = "Offline",
     val temperature: String = "17",
-    val message: String = "Offline"
+    val message: String = "Offline",
+    val topicId: String = "0"
 )
