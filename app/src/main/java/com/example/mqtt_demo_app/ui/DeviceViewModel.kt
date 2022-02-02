@@ -48,15 +48,12 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     //Connect to MQTT Broker and update "connected" value
     fun connectToMqttBroker(user_name: String, pass_word: String) {
         viewModelScope.launch {
-            /*repository.connectToMqttBroker(user_name, pass_word).collect { value ->
-                connected.postValue(value)
-                if (value) repository.resetValuesWhenDisconnected()
-            }*/
+
             val result = repository.connectToMqttBroker(user_name, pass_word)
-            //connected.postValue(result)
             brokerActive.postValue(result)
             repository.changeConnectionStatus(result)
-            if(!result) repository.resetValuesWhenDisconnected()
+            //Reset old values because it is a New Connection with Broker
+            repository.resetValuesWhenDisconnected()
         }
     }
 
@@ -71,7 +68,7 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
           //connected.postValue(result)
           brokerActive.postValue(result)
           repository.changeConnectionStatus(result)
-          if(!result) repository.resetValuesWhenDisconnected()
+          repository.resetValuesWhenDisconnected()
       }
     }
 
@@ -151,17 +148,4 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
         )
     }
 
-    //Disconnect from client if the VW is destroyed
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun onCleared() {
-        super.onCleared()
-        try {
-            if (MqttClientApi.getMqttClient().isConnected()) disconnectFromMqttBroker()
-            //Reset Values in DB
-            viewModelScope.launch {
-                repository.resetValuesWhenDisconnected()
-            }
-        } catch (e1: UninitializedPropertyAccessException) {
-        }
-    }
 }

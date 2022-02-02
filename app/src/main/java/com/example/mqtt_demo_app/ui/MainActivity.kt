@@ -2,6 +2,8 @@ package com.example.mqtt_demo_app.ui
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.activity.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -29,7 +31,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
 
-
         //Get the root view of the layout file with ViewBinding
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -43,8 +44,16 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+
     //Support Up Navigation
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
+
+
+    override fun onDestroy() {
+        super.onDestroy()
+        MqttClientApi.getMqttClient().disconnect()
+    }
+
 }
