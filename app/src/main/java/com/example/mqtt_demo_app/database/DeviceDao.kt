@@ -35,6 +35,10 @@ interface DeviceDao {
     @Query("SELECT * FROM devices WHERE id= :deviceId")
     fun getDevice(deviceId: Int): Flow<Device>
 
+    //get Connection Status of Devices
+    @Query("SELECT connected FROM devices GROUP BY connected")
+    fun getConnection(): Flow<Boolean>
+
     //Get if a User is SUBSCRIBED to a DEVICE
     @Query("SELECT subscribed FROM devices WHERE id= :deviceId")
     fun getIfSubscribed(deviceId: Int): Flow<Boolean>
@@ -57,8 +61,12 @@ interface DeviceDao {
     suspend fun updatePayload(time: String, status: String, temperature: String, message: String, topicId: String)
 
     //Update DB in Connectivity Loss
-    @Query("UPDATE devices SET status= :status, message= :message WHERE topicId= :topicId")
-    suspend fun updateWhenConnectionLost(status: String, message: String, topicId: String)
+    @Query("UPDATE devices SET status= :status, message= :message")
+    suspend fun updateWhenConnectionLost(status: String, message: String)
+
+    //Update Connection Status in DB
+    @Query("UPDATE devices SET connected= :value")
+    suspend fun changeConnectionStatus(value: Boolean)
 
     //Get Time from DB
     @Query("SELECT time FROM devices WHERE id= :deviceId")

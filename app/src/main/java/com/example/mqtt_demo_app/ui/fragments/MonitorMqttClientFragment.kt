@@ -71,8 +71,6 @@ class   MonitorMqttClientFragment : Fragment() {
         val status = binding.status
         val message = binding.message
 
-        //Create the Callback to receive the Published messages from Device
-        viewModel.setCallbackToClient(topicId)
 
         //Observe Time value that is saved in DB
         viewModel.time.observe(viewLifecycleOwner, {value->
@@ -106,7 +104,9 @@ class   MonitorMqttClientFragment : Fragment() {
         })
         //Observe Message from DB
         viewModel.message.observe(viewLifecycleOwner, {value ->
-            message.text = value
+                //There is NO CONNECTION to Broker
+            if (value == "ConnectionLost") Toast.makeText(context, "Connection Lost! Please connect again", Toast.LENGTH_LONG).show()
+            else message.text = value
         })
 
     }

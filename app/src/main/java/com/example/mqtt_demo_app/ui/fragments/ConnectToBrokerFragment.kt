@@ -56,11 +56,9 @@ class ConnectToBrokerFragment : Fragment() {
         val clientId: String = MqttClient.generateClientId()
         mqttClient = MqttClientApi.createMqttAndroidClient(activity?.applicationContext, MQTT_SERVER_URI,
             clientId)
-        //Save Client to VM
-        viewModel.setMqttAndroidClient(mqttClient)
 
         //Observe VM for a successful connection to Broker
-        viewModel.connected.observe(viewLifecycleOwner, { value ->
+        viewModel.brokerActive.observe(viewLifecycleOwner, { value ->
 
             when(value) {
                 true ->

@@ -62,9 +62,12 @@ class ConnectToDeviceFragment : Fragment() {
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                viewModel.disconnectFromMqttBroker()
+                Toast.makeText(context, "You are now disconnected from MQTT Broker", Toast.LENGTH_LONG).show()
             }
         })
 
+        //Create the Callback to receive the Published messages from Device
+        viewModel.setCallbackToClient()
     }
 
     override fun onCreateView(
@@ -80,13 +83,13 @@ class ConnectToDeviceFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        //Observe if User is disconnected properly
-        viewModel.connected.observe(viewLifecycleOwner, {value ->
-            if (value == false) {
-                    findNavController()
-                        .navigate(R.id.action_connectToDeviceFragment_to_connectToBrokerFragment)
-                }
-            })
+
+        //Observe if MQTT Broker is active to navigate to previous Fragment
+        viewModel.brokerActive.observe(viewLifecycleOwner, {value ->
+            if (!value) Toast.makeText(context, "You are now disconnected from MQTT Broker", Toast.LENGTH_LONG).show()
+        })
+
+
 
         //RecyclerView reference
         val recyclerView = binding.recyclerView

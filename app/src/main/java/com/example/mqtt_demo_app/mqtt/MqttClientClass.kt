@@ -87,6 +87,7 @@ class MqttClientClass(context: Context?,
         options.userName = username
         options.password = password.toCharArray()
 
+
         try {
             mqttClient.connect(options, null, cbConnect)
         } catch (e: MqttException) {

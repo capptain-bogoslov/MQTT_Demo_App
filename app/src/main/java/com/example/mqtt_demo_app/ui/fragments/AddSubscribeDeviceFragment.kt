@@ -101,7 +101,7 @@ class AddDeviceFragment : Fragment() {
         if (type == "ADD") subscribeButton.isVisible = false
         //If Device is Saved in DB observe the value for SUBSCRIBE
         if (type == "EDIT") {
-            //Observe if the User is subscribed to device
+            //Observe if the User is subscribed to device to display Layouts
             viewModel.isSubscribed.observe(viewLifecycleOwner, { value ->
                 if (value) {
                     subscribeButton.text = getString(R.string.monitor)
@@ -123,16 +123,18 @@ class AddDeviceFragment : Fragment() {
                     unsubscribeButton.visibility = View.GONE
                 }
             })
+
+
+            //Go to Connect to Broker Fragment when Connection Lost
+            viewModel.connected.observe(viewLifecycleOwner, { value ->
+                if (!value) {
+                    Toast.makeText(context, "Connection to MQTT Broker Lost! Please connect again to receive Messages", Toast.LENGTH_LONG).show()
+                    //findNavController().navigate(R.id.action_addDeviceFragment_to_connectToBrokerFragment)
+                }
+            })
         }
 
 
-        //Go to Connect to Broker Fragment when Connection Lost
-        viewModel.connected.observe(viewLifecycleOwner, { value ->
-            if (!value) {
-                Toast.makeText(context, "Connection Lost! Please connect again", Toast.LENGTH_LONG).show()
-                findNavController().navigate(R.id.action_addDeviceFragment_to_connectToBrokerFragment)
-            }
-        })
 
         //Put Values to Spinner
         val adapter = activity?.applicationContext?.let {
@@ -217,6 +219,7 @@ class AddDeviceFragment : Fragment() {
             } else {
                 //There is NO CONNECTION to Broker
                 Toast.makeText(context, "Connection Lost! Please connect again", Toast.LENGTH_LONG).show()
+                viewModel.changeBrokerStatus(false)
                 //Navigate to start Destination to connect again
                 findNavController().navigate(R.id.action_addDeviceFragment_to_connectToBrokerFragment)
 
@@ -226,7 +229,14 @@ class AddDeviceFragment : Fragment() {
 
         //Listener for UNSUBSCRIBE Button that unsubscribes Android Client from the Topic in MQTT Broker
         unsubscribeButton.setOnClickListener {
-            viewModel.unsubscribeToDevice(topicIdEditText.text.toString())
+            if (MqttClientApi.getMqttClient().isConnected()) {
+
+                viewModel.unsubscribeToDevice(topicIdEditText.text.toString())
+                //There is NO CONNECTION to Broker
+                Toast.makeText(context, "You are now Unsubscribed from the Device", Toast.LENGTH_LONG).show()
+                //Navigate to start Destination to connect again
+                findNavController().navigate(R.id.action_addDeviceFragment_to_connectToDeviceFragment)
+            }
         }//end Unsubscribe
     }
 

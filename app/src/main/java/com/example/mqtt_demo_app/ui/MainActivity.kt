@@ -7,7 +7,11 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.example.mqtt_demo_app.R
 import com.example.mqtt_demo_app.databinding.ActivityMainBinding
+import com.example.mqtt_demo_app.mqtt.MqttClientApi
+import com.example.mqtt_demo_app.mqtt.MqttClientClass
+import com.example.mqtt_demo_app.ui.fragments.MQTT_SERVER_URI
 import dagger.hilt.android.AndroidEntryPoint
+import org.eclipse.paho.client.mqttv3.MqttClient
 
 /**
  * MainActivity.kt-------- MainActivity of App that contains the Fragment Container
@@ -20,8 +24,10 @@ class MainActivity : AppCompatActivity() {
     ////NavController OBJ that manages APP NAV within a NavHost
     private lateinit var navController: NavController
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
 
 
         //Get the root view of the layout file with ViewBinding
