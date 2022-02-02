@@ -25,8 +25,6 @@ import kotlin.coroutines.resume
 class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
 
     val allDevices: Flow<List<Device>> = deviceDao.getAllDevices()
-    //Holds an Instance of Mqtt client class
-    //private val mqttClient : MqttClientClass = MqttClientApi.getMqttClient()
 
     private val moshi: Moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
@@ -73,7 +71,6 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
         return deviceDao.getConnection()
     }
 
-
     //Get if a User is SUBSCRIBED to a Device
     fun isSubscribed(id: Int): Flow<Boolean> {
         return deviceDao.getIfSubscribed(id)
@@ -96,14 +93,9 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
                 continuation.resume(false)
             }
         }
-
         //Connect and attach the Listener
         MqttClientApi.getMqttClient().connect(username?:"", password?:"", mqttActionListener)
-
-        //awaitClose{ channel.close() }
     }
-
-
 
     //Create suspendCancellableCoroutine that returns the Boolean value of the disconnection result
     suspend fun disconnectFromMqttBroker(): Boolean = suspendCancellableCoroutine { continuation ->
@@ -117,10 +109,7 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
                 continuation.resume(false)
             }
         }
-
         MqttClientApi.getMqttClient().disconnect(mqttActionListener)
-
-        //awaitClose { channel.close() }
     }
 
     //Set a Callback for mqttClient IOT receive Messages FLOW EDITION
@@ -145,14 +134,12 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
             }
 
             override fun deliveryComplete(token: IMqttDeliveryToken?) {
-                //trySend("DeliveryComplete")
                 Log.d(this.javaClass.name, "Delivery complete")
             }
         }
         MqttClientApi.getMqttClient().setCallBack(mqttClientCallback)
 
         awaitClose { channel.close() }
-
     }
 
     //Save Message to DB
@@ -175,9 +162,7 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
 
     //Function that returns a Boolean value to Repository for when the connection is Lost
     suspend fun changeConnectionStatus(connected: Boolean){
-
         deviceDao.changeConnectionStatus(connected)
-
     }
 
     //Function that subscribes a User to a topic IOT receive Publish Messages from another MQTT Client
@@ -190,7 +175,6 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
                 override fun onSuccess(asyncActionToken: IMqttToken?) {
                     continuation.resume(true)
                 }
-
                 override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
                     continuation.resume(false)
                 }
@@ -206,7 +190,6 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
                 override fun onSuccess(asyncActionToken: IMqttToken?) {
                     continuation.resume(false)
                 }
-
                 override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
                     continuation.resume(true)
                 }

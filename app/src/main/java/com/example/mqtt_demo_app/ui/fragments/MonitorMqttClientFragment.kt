@@ -36,7 +36,6 @@ class   MonitorMqttClientFragment : Fragment() {
     //Get the VM
     private val viewModel: DeviceViewModel by activityViewModels()
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //Get arguments from previous Fragment
@@ -47,7 +46,6 @@ class   MonitorMqttClientFragment : Fragment() {
             deviceName = it.getString("deviceName").toString()
             topicId =it.getString("topicId").toString()
         }
-
     }
 
     override fun onCreateView(
@@ -58,7 +56,6 @@ class   MonitorMqttClientFragment : Fragment() {
         _binding = FragmentMonitorMqttClientBinding.inflate(inflater, container, false)
         return binding.root
     }
-
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -71,7 +68,6 @@ class   MonitorMqttClientFragment : Fragment() {
         val status = binding.status
         val message = binding.message
 
-
         //Observe Time value that is saved in DB
         viewModel.time.observe(viewLifecycleOwner, {value->
             if (value == "-1") {
@@ -80,14 +76,12 @@ class   MonitorMqttClientFragment : Fragment() {
                 //Navigate to start Destination to connect again
                 //findNavController().navigate(R.id.action_monitorMqttClientFragment_to_connectToBrokerFragment)
                 time.text = "-"
-
             } else {
                 time.text = value
                 try {
                     progressBar.progress = (abs(50 -value.toInt()))
                 } catch (e1: NumberFormatException) {
                     Toast.makeText(context, "Not Valid Input from Client", Toast.LENGTH_LONG).show()
-
                 }
             }
         })
@@ -108,6 +102,5 @@ class   MonitorMqttClientFragment : Fragment() {
             if (value == "ConnectionLost") Toast.makeText(context, "Connection Lost! Please connect again", Toast.LENGTH_LONG).show()
             else message.text = value
         })
-
     }
 }

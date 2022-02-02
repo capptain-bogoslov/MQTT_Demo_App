@@ -3,8 +3,6 @@ package com.example.mqtt_demo_app.ui
 import androidx.lifecycle.*
 import com.example.mqtt_demo_app.data.DeviceRepository
 import com.example.mqtt_demo_app.database.Device
-import com.example.mqtt_demo_app.mqtt.MqttClientApi
-import com.example.mqtt_demo_app.mqtt.MqttClientClass
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import javax.inject.Inject
@@ -18,7 +16,6 @@ import javax.inject.Inject
 class DeviceViewModel @Inject constructor(private val repository: DeviceRepository): ViewModel() {
 
     //Holds an Instance of Mqtt client class
-    private lateinit var mqttClient : MqttClientClass
     private val allDevices: LiveData<List<Device>> = repository.allDevices.asLiveData()
     private val deviceId: MutableLiveData<Int> = MutableLiveData()
     val connected: LiveData<Boolean> = repository.getConnection().asLiveData()
@@ -39,7 +36,6 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
         repository.getMessage(device_id).asLiveData()
     }
 
-
     //Coroutines to handle data in a non-blocking way
     fun insert(device: Device) = viewModelScope.launch { repository.insert(device) }
     fun update(device: Device) = viewModelScope.launch { repository.update(device) }
@@ -48,7 +44,6 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     //Connect to MQTT Broker and update "connected" value
     fun connectToMqttBroker(user_name: String, pass_word: String) {
         viewModelScope.launch {
-
             val result = repository.connectToMqttBroker(user_name, pass_word)
             brokerActive.postValue(result)
             repository.changeConnectionStatus(result)
@@ -60,12 +55,7 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     //Connect to MQTT Broker and update "connected" value
     fun disconnectFromMqttBroker() {
       viewModelScope.launch {
-         /* repository.disconnectFromMqttBroker().collect { value ->
-              connected.postValue(value)
-          }
-          repository.resetValuesWhenDisconnected()*/
           val result = repository.disconnectFromMqttBroker()
-          //connected.postValue(result)
           brokerActive.postValue(result)
           repository.changeConnectionStatus(result)
           repository.resetValuesWhenDisconnected()
@@ -101,7 +91,6 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
         }
     }
 
-
     //get All Devices
     fun getAllDevices(): LiveData<List<Device>> {
         return allDevices
@@ -121,7 +110,6 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
     fun changeBrokerStatus(value: Boolean) {
         brokerActive.postValue(value)
     }
-
 
     //Updating values of existing Devices
     fun updateDeviceValues(device: Device, name: String, brand: String, type:String, topic: String): Device {
@@ -147,5 +135,4 @@ class DeviceViewModel @Inject constructor(private val repository: DeviceReposito
             message = "Offline"
         )
     }
-
 }

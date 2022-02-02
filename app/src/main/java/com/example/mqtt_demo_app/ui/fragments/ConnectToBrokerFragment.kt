@@ -51,7 +51,6 @@ class ConnectToBrokerFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
         //Create Mqtt Client
         val clientId: String = MqttClient.generateClientId()
         mqttClient = MqttClientApi.createMqttAndroidClient(activity?.applicationContext, MQTT_SERVER_URI,
@@ -78,9 +77,7 @@ class ConnectToBrokerFragment : Fragment() {
 
             //Connects to Broker with USERNAME & PASSWORD, for Demo APP that we do not implement them we pass empty values
             viewModel.connectToMqttBroker("", "")
-
         }
-
     }
 
     override fun onDestroy() {

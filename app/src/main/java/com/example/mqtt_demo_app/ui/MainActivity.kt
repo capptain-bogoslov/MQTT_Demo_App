@@ -26,34 +26,28 @@ class MainActivity : AppCompatActivity() {
     ////NavController OBJ that manages APP NAV within a NavHost
     private lateinit var navController: NavController
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
 
         //Get the root view of the layout file with ViewBinding
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
 
         //Retrieve NavController from the NavHost Fragment with unsafe cast
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
         setupActionBarWithNavController(navController)
-
     }
-
 
     //Support Up Navigation
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
 
-
+    //Disconnect from MQTT Broker if Activity is Destroyed and ViewModel cleared
     override fun onDestroy() {
         super.onDestroy()
         MqttClientApi.getMqttClient().disconnect()
     }
-
 }

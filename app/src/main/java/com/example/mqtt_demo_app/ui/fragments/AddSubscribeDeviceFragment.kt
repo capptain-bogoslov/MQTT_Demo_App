@@ -35,10 +35,8 @@ class AddDeviceFragment : Fragment() {
 
     //Get nullable reference to FragmentUserBindingClass
     private var _binding: FragmentAddDeviceBinding? = null
-
     //Get the value but once assigned you can't assign it to something else
     private val binding get() = _binding!!
-
     //Variables
     private var deviceId: Int = 0
     private lateinit var deviceName: String
@@ -47,7 +45,6 @@ class AddDeviceFragment : Fragment() {
     private lateinit var type: String
     private lateinit var topicId: String
     private val viewModel: DeviceViewModel by activityViewModels()
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -124,7 +121,6 @@ class AddDeviceFragment : Fragment() {
                 }
             })
 
-
             //Go to Connect to Broker Fragment when Connection Lost
             viewModel.connected.observe(viewLifecycleOwner, { value ->
                 if (!value) {
@@ -134,8 +130,6 @@ class AddDeviceFragment : Fragment() {
             })
         }
 
-
-
         //Put Values to Spinner
         val adapter = activity?.applicationContext?.let {
             ArrayAdapter(
@@ -144,7 +138,6 @@ class AddDeviceFragment : Fragment() {
             )
         } as SpinnerAdapter
         typeSpinner.adapter = adapter
-
 
         //Button Listeners to handle Device
         saveUpdateButton.setOnClickListener {

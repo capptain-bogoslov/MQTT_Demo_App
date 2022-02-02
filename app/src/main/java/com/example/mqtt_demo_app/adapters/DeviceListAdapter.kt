@@ -60,8 +60,6 @@ class DeviceListAdapter(
             binding.deviceType.text = device.deviceType
             binding.deviceStatus.text = device.status
 
-
-
             //Change Layout depending on Status Value
             val drawable1 = ContextCompat.getDrawable(binding.deviceStatus.context, R.drawable.lamp_bright_24)
             val drawable2 = ContextCompat.getDrawable(binding.deviceStatus.context, R.drawable.lamp_grey_24)
@@ -82,8 +80,6 @@ class DeviceListAdapter(
             binding.deviceMessage.text = device.message
         }
     }
-
-
 }
 
 

@@ -79,6 +79,4 @@ interface DeviceDao {
     //Get Time from DB
     @Query("SELECT message FROM devices WHERE id= :deviceId")
     fun getMessage(deviceId: Int): Flow<String>
-
-
 }
