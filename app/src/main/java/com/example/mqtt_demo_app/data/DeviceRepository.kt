@@ -223,7 +223,7 @@ class DeviceRepository @Inject constructor(private val deviceDao: DeviceDao) {
     //Reset values in DB when User is UNSUBSCRIBED from a Device
     suspend fun resetValuesWhenUnsubscribed(deviceId: Int) {
         deviceDao.changeSubscribed(deviceId, false)
-        deviceDao.updatePayload("-1", "Offline", "15", "Offline", "0")
+        deviceDao.updateWhenConnectionLost("Offline", "Unsubscribed")
     }
 
 }
